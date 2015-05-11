@@ -16,3 +16,35 @@
  * a status line in this context) displays the current state of the application,
  * as well as helpful keyboard shortcuts.
  */
+
+package main
+
+import "fmt"
+
+type PowerGoLine struct {
+}
+
+func (pogol PowerGoLine) Username() {
+	fmt.Printf("\\u")
+}
+
+func (pogol PowerGoLine) Hostname() {
+	fmt.Printf("@\\h")
+}
+
+func (pogol PowerGoLine) WorkingDirectory() {
+	fmt.Printf(" > \\w")
+}
+
+func (pogol PowerGoLine) RootSymbol() {
+	fmt.Printf(" $ \n")
+}
+
+func main() {
+	var pogol PowerGoLine
+
+	pogol.Username()
+	pogol.Hostname()
+	pogol.WorkingDirectory()
+	pogol.RootSymbol()
+}
