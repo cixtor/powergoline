@@ -20,20 +20,27 @@
 package main
 
 import "fmt"
+import "os"
 
 type PowerGoLine struct {
 }
 
 func (pogol PowerGoLine) Username() {
-	fmt.Printf("\\u")
+	var username string = os.Getenv("USERNAME")
+
+	fmt.Printf("%s", username)
 }
 
 func (pogol PowerGoLine) Hostname() {
-	fmt.Printf("@\\h")
+	hostname, _ := os.Hostname()
+
+	fmt.Printf("@%s", hostname)
 }
 
 func (pogol PowerGoLine) WorkingDirectory() {
-	fmt.Printf(" > \\w")
+	var workingdir string = os.Getenv("PWD")
+
+	fmt.Printf(" > %s", workingdir)
 }
 
 func (pogol PowerGoLine) RootSymbol() {
