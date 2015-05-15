@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "os"
+import "strings"
 
 type PowerGoLine struct {
 }
@@ -21,10 +22,27 @@ func (pogol PowerGoLine) Hostname() {
 }
 
 func (pogol PowerGoLine) WorkingDirectory() {
+	var homedir string = os.Getenv("HOME")
 	var workingdir string = os.Getenv("PWD")
+	var shortdir string = strings.Replace(workingdir, homedir, "", -1)
+	var segments []string = strings.Split(shortdir, "/")
+	var ttl_segms int = len(segments)
+	var last_segm int = (ttl_segms - 1)
 
-	fmt.Printf("\033[38;5;255;48;5;161m %s \033[0m", workingdir)
+	fmt.Printf("\033[38;5;255;48;5;161m ~ \033[0m")
 	fmt.Printf("\033[38;5;161;48;5;238m\ue0b0\033[0m")
+
+	for key, folder := range segments {
+		if folder != "" {
+			fmt.Printf("\033[38;5;251;48;5;238m %s \033[0m", folder)
+
+			if key == last_segm {
+				fmt.Printf("\033[38;5;238;48;5;070m\ue0b0\033[0m")
+			} else {
+				fmt.Printf("\033[38;5;251;48;5;238m\ue0b1\033[0m")
+			}
+		}
+	}
 }
 
 func (pogol PowerGoLine) RootSymbol() {
