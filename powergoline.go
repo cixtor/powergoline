@@ -37,15 +37,29 @@ func (pogol PowerGoLine) WorkingDirectory() {
 	}
 
 	// Print the sequence of folders of the current path.
+	var maxsegms int = 4
 	var segments []string = strings.Split(cleandir, "/")
 	var ttlsegms int = len(segments)
-	var last_segm int = (ttlsegms - 1)
+	var lastsegm int = (ttlsegms - 1)
+
+	if ttlsegms > maxsegms {
+		var newsegms []string = make([]string, 0)
+
+		newsegms = append(newsegms, segments[0])
+		newsegms = append(newsegms, "\u2026")
+		newsegms = append(newsegms, segments[ lastsegm - 2 ])
+		newsegms = append(newsegms, segments[ lastsegm - 1 ])
+		newsegms = append(newsegms, segments[ lastsegm ])
+
+		segments = newsegms
+		lastsegm = maxsegms
+	}
 
 	for key, folder := range segments {
 		if folder != "" {
 			fmt.Printf("\033[38;5;251;48;5;238m %s \033[0m", folder)
 
-			if key == last_segm {
+			if key == lastsegm {
 				fmt.Printf("\033[38;5;238;48;5;070m\ue0b0\033[0m")
 			} else {
 				fmt.Printf("\033[38;5;251;48;5;238m\ue0b1\033[0m")
