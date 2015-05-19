@@ -19,11 +19,18 @@
 
 package main
 
+import "flag"
+import "os"
+
 func main() {
+	flag.Parse()
+
 	var pogol PowerGoLine
+	var status string = flag.Arg(0)
 
 	pogol.Username()
 	pogol.Hostname()
-	pogol.WorkingDirectory()
-	pogol.RootSymbol()
+	pogol.WorkingDirectory(status)
+	pogol.RootSymbol(status)
+	os.Exit(0)
 }
