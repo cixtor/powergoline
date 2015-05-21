@@ -16,3 +16,27 @@ const status_permission = "004"
 const status_not_found = "014"
 const status_invalid_exit = "008"
 const status_terminated = "013"
+
+type Configuration struct {
+}
+
+func (config Configuration) Path() string {
+	var homedir string = os.Getenv("HOME")
+
+	return fmt.Sprintf("%s/%s", homedir, config_path)
+}
+
+func (config Configuration) Exists() (bool, error) {
+	var path string = config.Path()
+	_, err := os.Stat(path)
+
+	if err == nil {
+		return true, nil
+	}
+
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	return false, err
+}
