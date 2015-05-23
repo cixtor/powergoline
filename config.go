@@ -84,3 +84,14 @@ func (config Configuration) Default() PowerColor {
 
 	return pcolor
 }
+
+func (config Configuration) DefaultJson() ([]byte, error) {
+	var pcolor PowerColor = config.Default()
+	json_str, err := json.MarshalIndent(pcolor, "", "    ")
+
+	if err != nil {
+		return nil, err
+	}
+
+	return json_str, nil
+}
