@@ -95,3 +95,24 @@ func (config Configuration) DefaultJson() ([]byte, error) {
 
 	return json_str, nil
 }
+
+func (config Configuration) Values() PowerColor {
+	var path string = config.Path()
+	exists, _ := config.Exists()
+
+	// Create and use the default configuration.
+	if exists == false {
+		file, err := os.Create(path)
+		defer file.Close()
+
+		if err == nil {
+			json_str, err := config.DefaultJson()
+
+			if err == nil {
+				file.Write(json_str)
+			}
+		}
+	}
+
+	return config.Default()
+}
