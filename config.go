@@ -1,5 +1,10 @@
 package main
 
+import "encoding/json"
+import "fmt"
+import "io/ioutil"
+import "os"
+
 const config_path = ".powergoline.json"
 const username_fg = "255"
 const username_bg = "006"
@@ -111,6 +116,23 @@ func (config Configuration) Values() PowerColor {
 			if err == nil {
 				file.Write(json_str)
 			}
+
+			return config.Default()
+		}
+	}
+
+	// Read the external configuration.
+	file, err := os.Open(path)
+	defer file.Close()
+
+	if err == nil {
+		var alt_pcolor PowerColor
+		body, _ := ioutil.ReadAll(file)
+
+		err = json.Unmarshal(body, &alt_pcolor)
+
+		if err == nil {
+			return alt_pcolor
 		}
 	}
 
