@@ -13,25 +13,32 @@ func (pogol PowerGoLine) ExitColor(status string) string {
 	/**
 	 * System Status Codes.
 	 *
-     * 0     - Operation success and generic status code.
-     * 1     - Catchall for general errors and failures.
-     * 2     - Misuse of shell builtins, missing command, or permission problem.
-     * 126   - Command invoked cannot execute, permission problem,
-     *         or the command is not an executable binary.
-     * 127   - Command not found, illegal path, or possible typo.
-     * 128   - Invalid argument to exit, only use range 0-255.
-     * 128+n - Fatal error signal where "n" is the PID.
-     * 130   - Script terminated by Control-C.
-     * 255*  - Exit status out of range.
+	 * 0     - Operation success and generic status code.
+	 * 1     - Catchall for general errors and failures.
+	 * 2     - Misuse of shell builtins, missing command, or permission problem.
+	 * 126   - Command invoked cannot execute, permission problem,
+	 *         or the command is not an executable binary.
+	 * 127   - Command not found, illegal path, or possible typo.
+	 * 128   - Invalid argument to exit, only use range 0-255.
+	 * 128+n - Fatal error signal where "n" is the PID.
+	 * 130   - Script terminated by Control-C.
+	 * 255*  - Exit status out of range.
 	 */
 
-	if status == "0" {          extcolor = "070"
-	} else if status == "1"   { extcolor = "001"
-	} else if status == "126" { extcolor = "004"
-	} else if status == "127" { extcolor = "014"
-	} else if status == "128" { extcolor = "008"
-	} else if status == "130" { extcolor = "013"
-	} else {                    extcolor = "003"
+	if status == "0" {
+		extcolor = "070"
+	} else if status == "1" {
+		extcolor = "001"
+	} else if status == "126" {
+		extcolor = "004"
+	} else if status == "127" {
+		extcolor = "014"
+	} else if status == "128" {
+		extcolor = "008"
+	} else if status == "130" {
+		extcolor = "013"
+	} else {
+		extcolor = "003"
 	}
 
 	return extcolor
@@ -82,9 +89,9 @@ func (pogol PowerGoLine) WorkingDirectory(status string) {
 
 		newsegms = append(newsegms, segments[0])
 		newsegms = append(newsegms, "\u2026")
-		newsegms = append(newsegms, segments[ lastsegm - 2 ])
-		newsegms = append(newsegms, segments[ lastsegm - 1 ])
-		newsegms = append(newsegms, segments[ lastsegm ])
+		newsegms = append(newsegms, segments[lastsegm-2])
+		newsegms = append(newsegms, segments[lastsegm-1])
+		newsegms = append(newsegms, segments[lastsegm])
 
 		segments = newsegms
 		lastsegm = maxsegms
