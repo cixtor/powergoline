@@ -7,7 +7,7 @@ import "strings"
 type PowerGoLine struct {
 }
 
-func (pogol PowerGoLine) ExitColor(status string) string {
+func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	var extcolor string
 
 	/**
@@ -26,19 +26,19 @@ func (pogol PowerGoLine) ExitColor(status string) string {
 	 */
 
 	if status == "0" {
-		extcolor = "070"
+		extcolor = pcolor.Status.Success
 	} else if status == "1" {
-		extcolor = "001"
+		extcolor = pcolor.Status.Failure
 	} else if status == "126" {
-		extcolor = "004"
+		extcolor = pcolor.Status.Permission
 	} else if status == "127" {
-		extcolor = "014"
+		extcolor = pcolor.Status.NotFound
 	} else if status == "128" {
-		extcolor = "008"
+		extcolor = pcolor.Status.InvalidExit
 	} else if status == "130" {
-		extcolor = "013"
+		extcolor = pcolor.Status.Terminated
 	} else {
-		extcolor = "003"
+		extcolor = pcolor.Status.Misuse
 	}
 
 	return extcolor
@@ -62,12 +62,12 @@ func (pogol PowerGoLine) Hostname() {
 	fmt.Printf("\\[\033[38;5;012;48;5;161m\\]\uE0B0\\[\033[0m\\]")
 }
 
-func (pogol PowerGoLine) WorkingDirectory(status string) {
+func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	var homedir string = os.Getenv("HOME")
 	var workingdir string = os.Getenv("PWD")
 	var shortdir string = strings.Replace(workingdir, homedir, "", -1)
 	var cleandir string = strings.Trim(shortdir, "/")
-	var extcolor string = pogol.ExitColor(status)
+	var extcolor string = pogol.ExitColor(pcolor, status)
 
 	// Print the user home directory path.
 	fmt.Printf("\\[\033[38;5;255;48;5;161m\\] ~ \\[\033[0m\\]")
@@ -110,8 +110,8 @@ func (pogol PowerGoLine) WorkingDirectory(status string) {
 	}
 }
 
-func (pogol PowerGoLine) RootSymbol(status string) {
-	var extcolor string = pogol.ExitColor(status)
+func (pogol PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
+	var extcolor string = pogol.ExitColor(pcolor, status)
 
 	fmt.Printf("\\[\033[38;5;255;48;5;%sm\\] $ \\[\033[0m\\]", extcolor)
 	fmt.Printf("\\[\033[38;5;%sm\\]\uE0B0\\[\033[0m\\]", extcolor)

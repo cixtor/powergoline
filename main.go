@@ -26,11 +26,14 @@ func main() {
 	flag.Parse()
 
 	var pogol PowerGoLine
+	var config Configuration
 	var status string = flag.Arg(0)
+	var pcolor PowerColor = config.Values()
 
 	pogol.Username()
 	pogol.Hostname()
-	pogol.WorkingDirectory(status)
-	pogol.RootSymbol(status)
+	pogol.WorkingDirectory(pcolor, status)
+	pogol.RootSymbol(pcolor, status)
+
 	os.Exit(0)
 }
