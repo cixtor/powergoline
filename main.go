@@ -30,7 +30,7 @@ func main() {
 	var status string = flag.Arg(0)
 	var pcolor PowerColor = config.Values()
 
-	pogol.Username()
+	pogol.Username(pcolor)
 	pogol.Hostname()
 	pogol.WorkingDirectory(pcolor, status)
 	pogol.RootSymbol(pcolor, status)

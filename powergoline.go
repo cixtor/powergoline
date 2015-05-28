@@ -44,11 +44,14 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	return extcolor
 }
 
-func (pogol PowerGoLine) Username() {
+func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	var username string = os.Getenv("USERNAME")
+	var fg string = pcolor.UsernameFg
+	var bg string = pcolor.UsernameBg
+	var hbg string = pcolor.HostnameBg
 
-	fmt.Printf("\\[\033[38;5;255;48;5;006m\\] %s \\[\033[0m\\]", username)
-	fmt.Printf("\\[\033[38;5;006;48;5;012m\\]\uE0B0\\[\033[0m\\]")
+	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] %s \\[\033[0m\\]", fg, bg, username)
+	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", bg, hbg)
 }
 
 func (pogol PowerGoLine) Hostname() {
