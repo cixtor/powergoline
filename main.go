@@ -31,7 +31,7 @@ func main() {
 	var pcolor PowerColor = config.Values()
 
 	pogol.Username(pcolor)
-	pogol.Hostname()
+	pogol.Hostname(pcolor)
 	pogol.WorkingDirectory(pcolor, status)
 	pogol.RootSymbol(pcolor, status)
 

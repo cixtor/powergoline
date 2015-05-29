@@ -54,15 +54,18 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", bg, hbg)
 }
 
-func (pogol PowerGoLine) Hostname() {
+func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
 	hostname, err := os.Hostname()
+	var fg string = pcolor.HostnameFg
+	var bg string = pcolor.HostnameBg
+	var hbg string = pcolor.HomeDirectoryBg
 
 	if err != nil {
 		hostname = "unknown"
 	}
 
-	fmt.Printf("\\[\033[38;5;255;48;5;012m\\] %s \\[\033[0m\\]", hostname)
-	fmt.Printf("\\[\033[38;5;012;48;5;161m\\]\uE0B0\\[\033[0m\\]")
+	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] %s \\[\033[0m\\]", fg, bg, hostname)
+	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", bg, hbg)
 }
 
 func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
