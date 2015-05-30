@@ -75,13 +75,19 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	var cleandir string = strings.Trim(shortdir, "/")
 	var extcolor string = pogol.ExitColor(pcolor, status)
 
+	// Get configured colors.
+	var home_fg string = pcolor.HomeDirectoryFg
+	var home_bg string = pcolor.HomeDirectoryBg
+	var wd_fg string = pcolor.WorkingDirectoryFg
+	var wd_bg string = pcolor.WorkingDirectoryBg
+
 	// Print the user home directory path.
-	fmt.Printf("\\[\033[38;5;255;48;5;161m\\] ~ \\[\033[0m\\]")
+	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] ~ \\[\033[0m\\]", home_fg, home_bg)
 
 	if cleandir == "" {
-		fmt.Printf("\\[\033[38;5;161;48;5;%sm\\]\uE0B0\\[\033[0m\\]", extcolor)
+		fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", home_bg, extcolor)
 	} else {
-		fmt.Printf("\\[\033[38;5;161;48;5;238m\\]\uE0B0\\[\033[0m\\]")
+		fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", home_bg, wd_bg)
 	}
 
 	// Print the sequence of folders of the current path.
@@ -105,12 +111,12 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 
 	for key, folder := range segments {
 		if folder != "" {
-			fmt.Printf("\\[\033[38;5;251;48;5;238m\\] %s \\[\033[0m\\]", folder)
+			fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] %s \\[\033[0m\\]", wd_fg, wd_bg, folder)
 
 			if key == lastsegm {
-				fmt.Printf("\\[\033[38;5;238;48;5;%sm\\]\uE0B0\\[\033[0m\\]", extcolor)
+				fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", wd_bg, extcolor)
 			} else {
-				fmt.Printf("\\[\033[38;5;251;48;5;238m\\]\uE0B1\\[\033[0m\\]")
+				fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B1\\[\033[0m\\]", wd_fg, wd_bg)
 			}
 		}
 	}
