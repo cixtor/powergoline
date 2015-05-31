@@ -124,8 +124,9 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 
 func (pogol PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
 	var extcolor string = pogol.ExitColor(pcolor, status)
+	var fg string = pcolor.Status.Symbol
 
-	fmt.Printf("\\[\033[38;5;255;48;5;%sm\\] $ \\[\033[0m\\]", extcolor)
+	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] $ \\[\033[0m\\]", fg, extcolor)
 	fmt.Printf("\\[\033[38;5;%sm\\]\uE0B0\\[\033[0m\\]", extcolor)
 	fmt.Printf("\u0020\n")
 }

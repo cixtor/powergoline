@@ -5,7 +5,10 @@ import "fmt"
 import "io/ioutil"
 import "os"
 
+// External configuration file path.
 const config_path = ".powergoline.json"
+
+// Power line default colors.
 const username_fg = "255"
 const username_bg = "006"
 const hostname_fg = "255"
@@ -14,6 +17,9 @@ const home_directory_fg = "255"
 const home_directory_bg = "161"
 const working_directory_fg = "251"
 const working_directory_bg = "238"
+
+// Status code default colors.
+const status_symbol = "255"
 const status_success = "070"
 const status_failure = "001"
 const status_misuse = "003"
@@ -38,6 +44,7 @@ type PowerColor struct {
 }
 
 type StatusColor struct {
+	Symbol      string `json:"symbol"`
 	Success     string `json:"success"`
 	Failure     string `json:"failure"`
 	Misuse      string `json:"misuse"`
@@ -79,6 +86,8 @@ func (config Configuration) Default() PowerColor {
 	pcolor.HomeDirectoryBg = home_directory_bg
 	pcolor.WorkingDirectoryFg = working_directory_fg
 	pcolor.WorkingDirectoryBg = working_directory_bg
+
+	pcolor.Status.Symbol = status_symbol
 	pcolor.Status.Success = status_success
 	pcolor.Status.Failure = status_failure
 	pcolor.Status.Misuse = status_misuse
