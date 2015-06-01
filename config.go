@@ -25,7 +25,7 @@ const status_failure = "001"
 const status_misuse = "003"
 const status_permission = "004"
 const status_not_found = "014"
-const status_invalid_exit = "008"
+const status_invalid_exit = "202"
 const status_terminated = "013"
 
 type Configuration struct {
