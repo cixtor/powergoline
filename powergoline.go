@@ -50,8 +50,8 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	var bg string = pcolor.UsernameBg
 	var hbg string = pcolor.HostnameBg
 
-	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] %s \\[\033[0m\\]", fg, bg, username)
-	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", bg, hbg)
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", fg, bg, username)
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", bg, hbg)
 }
 
 func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
@@ -64,8 +64,8 @@ func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
 		hostname = "unknown"
 	}
 
-	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] %s \\[\033[0m\\]", fg, bg, hostname)
-	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", bg, hbg)
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", fg, bg, hostname)
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", bg, hbg)
 }
 
 func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
@@ -82,12 +82,12 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	var wd_bg string = pcolor.WorkingDirectoryBg
 
 	// Print the user home directory path.
-	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] ~ \\[\033[0m\\]", home_fg, home_bg)
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] ~ \\[\\e[0m\\]", home_fg, home_bg)
 
 	if cleandir == "" {
-		fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", home_bg, extcolor)
+		fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", home_bg, extcolor)
 	} else {
-		fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", home_bg, wd_bg)
+		fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", home_bg, wd_bg)
 	}
 
 	// Print the sequence of folders of the current path.
@@ -111,12 +111,12 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 
 	for key, folder := range segments {
 		if folder != "" {
-			fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] %s \\[\033[0m\\]", wd_fg, wd_bg, folder)
+			fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", wd_fg, wd_bg, folder)
 
 			if key == lastsegm {
-				fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B0\\[\033[0m\\]", wd_bg, extcolor)
+				fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", wd_bg, extcolor)
 			} else {
-				fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\]\uE0B1\\[\033[0m\\]", wd_fg, wd_bg)
+				fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B1\\[\\e[0m\\]", wd_fg, wd_bg)
 			}
 		}
 	}
@@ -126,7 +126,7 @@ func (pogol PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
 	var extcolor string = pogol.ExitColor(pcolor, status)
 	var fg string = pcolor.Status.Symbol
 
-	fmt.Printf("\\[\033[38;5;%s;48;5;%sm\\] $ \\[\033[0m\\]", fg, extcolor)
-	fmt.Printf("\\[\033[38;5;%sm\\]\uE0B0\\[\033[0m\\]", extcolor)
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] $ \\[\\e[0m\\]", fg, extcolor)
+	fmt.Printf("\\[\\e[38;5;%sm\\]\uE0B0\\[\\e[0m\\]", extcolor)
 	fmt.Printf("\u0020\n")
 }
