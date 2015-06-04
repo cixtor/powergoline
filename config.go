@@ -60,19 +60,15 @@ func (config Configuration) Path() string {
 	return fmt.Sprintf("%s/%s", homedir, config_path)
 }
 
-func (config Configuration) Exists() (bool, error) {
+func (config Configuration) Exists() bool {
 	var path string = config.Path()
 	_, err := os.Stat(path)
 
-	if err == nil {
-		return true, nil
+	if err != nil {
+		return false
 	}
 
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-
-	return false, err
+	return true
 }
 
 func (config Configuration) Default() PowerColor {
@@ -112,7 +108,7 @@ func (config Configuration) DefaultJson() ([]byte, error) {
 
 func (config Configuration) Values() PowerColor {
 	var path string = config.Path()
-	exists, _ := config.Exists()
+	var exists bool = config.Exists()
 
 	// Create and use the default configuration.
 	if exists == false {

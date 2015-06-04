@@ -46,6 +46,7 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 
 func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	var username string = os.Getenv("USERNAME")
+
 	var fg string = pcolor.UsernameFg
 	var bg string = pcolor.UsernameBg
 	var hbg string = pcolor.HostnameBg
@@ -56,6 +57,7 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 
 func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
 	hostname, err := os.Hostname()
+
 	var fg string = pcolor.HostnameFg
 	var bg string = pcolor.HostnameBg
 	var hbg string = pcolor.HomeDirectoryBg
