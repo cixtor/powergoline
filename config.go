@@ -6,27 +6,27 @@ import "io/ioutil"
 import "os"
 
 // External configuration file path.
-const config_path = ".powergoline.json"
+const config_path string = ".powergoline.json"
 
 // Power line default colors.
-const username_fg = "255"
-const username_bg = "006"
-const hostname_fg = "255"
-const hostname_bg = "012"
-const home_directory_fg = "255"
-const home_directory_bg = "161"
-const working_directory_fg = "251"
-const working_directory_bg = "238"
+const username_fg string = "255"
+const username_bg string = "006"
+const hostname_fg string = "255"
+const hostname_bg string = "012"
+const home_directory_fg string = "255"
+const home_directory_bg string = "161"
+const working_directory_fg string = "251"
+const working_directory_bg string = "238"
 
 // Status code default colors.
-const status_symbol = "255"
-const status_success = "070"
-const status_failure = "001"
-const status_misuse = "003"
-const status_permission = "004"
-const status_not_found = "014"
-const status_invalid_exit = "202"
-const status_terminated = "013"
+const status_symbol string = "255"
+const status_success string = "070"
+const status_failure string = "001"
+const status_misuse string = "003"
+const status_permission string = "004"
+const status_not_found string = "014"
+const status_invalid_exit string = "202"
+const status_terminated string = "013"
 
 type Configuration struct {
 }
