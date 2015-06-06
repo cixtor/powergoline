@@ -125,10 +125,18 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 }
 
 func (pogol PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
+	var symbol string
+	var uid int = os.Getuid()
 	var extcolor string = pogol.ExitColor(pcolor, status)
 	var fg string = pcolor.Status.Symbol
 
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] $ \\[\\e[0m\\]", fg, extcolor)
+	if uid == 0 {
+		symbol = pcolor.Symbol.SuperUser
+	} else {
+		symbol = pcolor.Symbol.Regular
+	}
+
+	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", fg, extcolor, symbol)
 	fmt.Printf("\\[\\e[38;5;%sm\\]\uE0B0\\[\\e[0m\\]", extcolor)
 	fmt.Printf("\u0020\n")
 }

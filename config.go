@@ -18,6 +18,10 @@ const home_directory_bg string = "161"
 const working_directory_fg string = "251"
 const working_directory_bg string = "238"
 
+// Define default status symbols.
+const symbol_regular string = "$"
+const symbol_super_user string = "#"
+
 // Status code default colors.
 const status_symbol string = "255"
 const status_success string = "070"
@@ -32,15 +36,16 @@ type Configuration struct {
 }
 
 type PowerColor struct {
-	UsernameFg         string      `json:"username_fg"`
-	UsernameBg         string      `json:"username_bg"`
-	HostnameFg         string      `json:"hostname_fg"`
-	HostnameBg         string      `json:"hostname_bg"`
-	HomeDirectoryFg    string      `json:"home_directory_fg"`
-	HomeDirectoryBg    string      `json:"home_directory_bg"`
-	WorkingDirectoryFg string      `json:"working_directory_fg"`
-	WorkingDirectoryBg string      `json:"working_directory_bg"`
-	Status             StatusColor `json:"status"`
+	UsernameFg         string       `json:"username_fg"`
+	UsernameBg         string       `json:"username_bg"`
+	HostnameFg         string       `json:"hostname_fg"`
+	HostnameBg         string       `json:"hostname_bg"`
+	HomeDirectoryFg    string       `json:"home_directory_fg"`
+	HomeDirectoryBg    string       `json:"home_directory_bg"`
+	WorkingDirectoryFg string       `json:"working_directory_fg"`
+	WorkingDirectoryBg string       `json:"working_directory_bg"`
+	Status             StatusColor  `json:"status"`
+	Symbol             StatusSymbol `json:"symbol"`
 }
 
 type StatusColor struct {
@@ -52,6 +57,11 @@ type StatusColor struct {
 	NotFound    string `json:"not_found"`
 	InvalidExit string `json:"invalid_exit"`
 	Terminated  string `json:"terminated"`
+}
+
+type StatusSymbol struct {
+	Regular   string `json:"regular"`
+	SuperUser string `json:"super_user"`
 }
 
 func (config Configuration) Path() string {
@@ -91,6 +101,9 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Status.NotFound = status_not_found
 	pcolor.Status.InvalidExit = status_invalid_exit
 	pcolor.Status.Terminated = status_terminated
+
+	pcolor.Symbol.Regular = symbol_regular
+	pcolor.Symbol.SuperUser = symbol_super_user
 
 	return pcolor
 }
