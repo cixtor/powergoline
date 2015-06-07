@@ -7,6 +7,30 @@ import "strings"
 type PowerGoLine struct {
 }
 
+func (pogol PowerGoLine) Print(text string, fg string, bg string) {
+	var color_seq string
+
+	// Print foreground color.
+	if fg != "" && bg != "" {
+		color_seq += fmt.Sprintf("38;5;%s", fg)
+		color_seq += fmt.Sprintf(";")
+		color_seq += fmt.Sprintf("48;5;%s", bg)
+	} else if fg != "" {
+		color_seq += fmt.Sprintf("38;5;%s", fg)
+	} else if bg != "" {
+		color_seq += fmt.Sprintf("48;5;%s", bg)
+	}
+
+	// Add color sequences if necessary.
+	if len(color_seq) > 0 {
+		fmt.Printf("\\[\\e[%sm\\]", color_seq)
+		fmt.Printf("%s", text)
+		fmt.Printf("\\[\\e[0m\\]")
+	} else {
+		fmt.Printf("%s", text)
+	}
+}
+
 func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	var extcolor string
 
@@ -51,8 +75,9 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	var bg string = pcolor.UsernameBg
 	var hbg string = pcolor.HostnameBg
 
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", fg, bg, username)
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", bg, hbg)
+	username = fmt.Sprintf(" %s ", username)
+	pogol.Print(username, fg, bg)
+	pogol.Print("\uE0B0", bg, hbg)
 }
 
 func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
@@ -63,11 +88,12 @@ func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
 	var hbg string = pcolor.HomeDirectoryBg
 
 	if err != nil {
-		hostname = "unknown"
+		hostname = "localhost"
 	}
 
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", fg, bg, hostname)
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", bg, hbg)
+	hostname = fmt.Sprintf(" %s ", hostname)
+	pogol.Print(hostname, fg, bg)
+	pogol.Print("\uE0B0", bg, hbg)
 }
 
 func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
@@ -84,12 +110,12 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	var wd_bg string = pcolor.WorkingDirectoryBg
 
 	// Print the user home directory path.
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] ~ \\[\\e[0m\\]", home_fg, home_bg)
+	pogol.Print(" ~ ", home_fg, home_bg)
 
 	if cleandir == "" {
-		fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", home_bg, extcolor)
+		pogol.Print("\uE0B0", home_bg, extcolor)
 	} else {
-		fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", home_bg, wd_bg)
+		pogol.Print("\uE0B0", home_bg, wd_bg)
 	}
 
 	// Print the sequence of folders of the current path.
@@ -113,12 +139,13 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 
 	for key, folder := range segments {
 		if folder != "" {
-			fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", wd_fg, wd_bg, folder)
+			folder = fmt.Sprintf(" %s ", folder)
+			pogol.Print(folder, wd_fg, wd_bg)
 
 			if key == lastsegm {
-				fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B0\\[\\e[0m\\]", wd_bg, extcolor)
+				pogol.Print("\uE0B0", wd_bg, extcolor)
 			} else {
-				fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\]\uE0B1\\[\\e[0m\\]", wd_fg, wd_bg)
+				pogol.Print("\uE0B1", wd_fg, wd_bg)
 			}
 		}
 	}
@@ -136,7 +163,8 @@ func (pogol PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
 		symbol = pcolor.Symbol.Regular
 	}
 
-	fmt.Printf("\\[\\e[38;5;%s;48;5;%sm\\] %s \\[\\e[0m\\]", fg, extcolor, symbol)
-	fmt.Printf("\\[\\e[38;5;%sm\\]\uE0B0\\[\\e[0m\\]", extcolor)
-	fmt.Printf("\u0020\n")
+	symbol = fmt.Sprintf(" %s ", symbol)
+	pogol.Print(symbol, fg, extcolor)
+	pogol.Print("\uE0B0", extcolor, "")
+	pogol.Print("\u0020\n", "", "")
 }
