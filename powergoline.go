@@ -68,6 +68,10 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	return extcolor
 }
 
+func (pogol PowerGoLine) TermTitle() {
+	fmt.Printf("\\[\\e]0;\\u@\\h: \\w\\a\\]")
+}
+
 func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	var username string = os.Getenv("USERNAME")
 
