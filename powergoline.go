@@ -73,30 +73,20 @@ func (pogol PowerGoLine) TermTitle() {
 }
 
 func (pogol PowerGoLine) Username(pcolor PowerColor) {
-	var username string = os.Getenv("USERNAME")
-
 	var fg string = pcolor.UsernameFg
 	var bg string = pcolor.UsernameBg
 	var hbg string = pcolor.HostnameBg
 
-	username = fmt.Sprintf(" %s ", username)
-	pogol.Print(username, fg, bg)
+	pogol.Print(" \\u ", fg, bg)
 	pogol.Print("\uE0B0", bg, hbg)
 }
 
 func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
-	hostname, err := os.Hostname()
-
 	var fg string = pcolor.HostnameFg
 	var bg string = pcolor.HostnameBg
 	var hbg string = pcolor.HomeDirectoryBg
 
-	if err != nil {
-		hostname = "localhost"
-	}
-
-	hostname = fmt.Sprintf(" %s ", hostname)
-	pogol.Print(hostname, fg, bg)
+	pogol.Print(" \\h ", fg, bg)
 	pogol.Print("\uE0B0", bg, hbg)
 }
 
