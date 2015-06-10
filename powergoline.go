@@ -2,6 +2,7 @@ package main
 
 import "fmt"
 import "os"
+import "path"
 import "strings"
 
 type PowerGoLine struct {
@@ -29,6 +30,18 @@ func (pogol PowerGoLine) Print(text string, fg string, bg string) {
 	} else {
 		fmt.Printf("%s", text)
 	}
+}
+
+func (pogol PowerGoLine) IsRdonlyDir(folder string) bool {
+	var temp_path string = path.Join(folder, temp_file)
+	_, err := os.Create(temp_path)
+
+	if err != nil {
+		return true
+	}
+
+	os.Remove(temp_path)
+	return false
 }
 
 func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
@@ -96,12 +109,15 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	var shortdir string = strings.Replace(workingdir, homedir, "", -1)
 	var cleandir string = strings.Trim(shortdir, "/")
 	var extcolor string = pogol.ExitColor(pcolor, status)
+	var is_rdonly_dir bool = pogol.IsRdonlyDir(workingdir)
 
 	// Get configured colors.
 	var home_fg string = pcolor.HomeDirectoryFg
 	var home_bg string = pcolor.HomeDirectoryBg
 	var wd_fg string = pcolor.WorkingDirectoryFg
 	var wd_bg string = pcolor.WorkingDirectoryBg
+	var rd_fg string = pcolor.RdonlyDirectoryFg
+	var rd_bg string = pcolor.RdonlyDirectoryBg
 
 	// Print the user home directory path.
 	pogol.Print(" ~ ", home_fg, home_bg)
@@ -131,13 +147,21 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 		lastsegm = maxsegms
 	}
 
+	// Draw each directory segment with right arrow.
 	for key, folder := range segments {
 		if folder != "" {
 			folder = fmt.Sprintf(" %s ", folder)
 			pogol.Print(folder, wd_fg, wd_bg)
 
 			if key == lastsegm {
-				pogol.Print("\uE0B0", wd_bg, extcolor)
+				// Draw last arrow and read-only lock.
+				if is_rdonly_dir == true {
+					pogol.Print("\uE0B0", wd_bg, rd_bg)
+					pogol.Print(" \uE0A2 ", rd_fg, rd_bg)
+					pogol.Print("\uE0B0", rd_bg, extcolor)
+				} else {
+					pogol.Print("\uE0B0", wd_bg, extcolor)
+				}
 			} else {
 				pogol.Print("\uE0B1", wd_fg, wd_bg)
 			}

@@ -7,6 +7,7 @@ import "os"
 
 // External configuration file path.
 const config_path string = ".powergoline.json"
+const temp_file string = "_tempfile_0f060643f7.txt"
 
 // Power line default colors.
 const username_fg string = "255"
@@ -17,6 +18,8 @@ const home_directory_fg string = "255"
 const home_directory_bg string = "161"
 const working_directory_fg string = "251"
 const working_directory_bg string = "238"
+const rdonly_directory_fg string = "255"
+const rdonly_directory_bg string = "124"
 
 // Define default status symbols.
 const symbol_regular string = "$"
@@ -44,6 +47,8 @@ type PowerColor struct {
 	HomeDirectoryBg    string       `json:"home_directory_bg"`
 	WorkingDirectoryFg string       `json:"working_directory_fg"`
 	WorkingDirectoryBg string       `json:"working_directory_bg"`
+	RdonlyDirectoryFg  string       `json:"rdonly_directory_fg"`
+	RdonlyDirectoryBg  string       `json:"rdonly_directory_bg"`
 	Status             StatusColor  `json:"status"`
 	Symbol             StatusSymbol `json:"symbol"`
 }
@@ -92,6 +97,8 @@ func (config Configuration) Default() PowerColor {
 	pcolor.HomeDirectoryBg = home_directory_bg
 	pcolor.WorkingDirectoryFg = working_directory_fg
 	pcolor.WorkingDirectoryBg = working_directory_bg
+	pcolor.RdonlyDirectoryFg = rdonly_directory_fg
+	pcolor.RdonlyDirectoryBg = rdonly_directory_bg
 
 	pcolor.Status.Symbol = status_symbol
 	pcolor.Status.Success = status_success
