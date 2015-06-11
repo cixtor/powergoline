@@ -4,6 +4,7 @@ import "fmt"
 import "os"
 import "path"
 import "strings"
+import "time"
 
 type PowerGoLine struct {
 }
@@ -83,6 +84,19 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 
 func (pogol PowerGoLine) TermTitle() {
 	fmt.Printf("\\[\\e]0;\\u@\\h: \\w\\a\\]")
+}
+
+func (pogol PowerGoLine) DateTime(pcolor PowerColor) {
+	if pcolor.Datetime.Status == "enabled" {
+		var date_time string = time.Now().Format("15:04:05")
+		var fg string = pcolor.Datetime.Foreground
+		var bg string = pcolor.Datetime.Background
+		var ubg string = pcolor.UsernameBg
+
+		date_time = fmt.Sprintf(" %s ", date_time)
+		pogol.Print(date_time, fg, bg)
+		pogol.Print("\uE0B2", ubg, bg)
+	}
 }
 
 func (pogol PowerGoLine) Username(pcolor PowerColor) {

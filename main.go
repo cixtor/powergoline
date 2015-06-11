@@ -31,6 +31,7 @@ func main() {
 	var pcolor PowerColor = config.Values()
 
 	pogol.TermTitle()
+	pogol.DateTime(pcolor)
 	pogol.Username(pcolor)
 	pogol.Hostname(pcolor)
 	pogol.WorkingDirectory(pcolor, status)

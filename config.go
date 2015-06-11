@@ -21,6 +21,11 @@ const working_directory_bg string = "238"
 const rdonly_directory_fg string = "255"
 const rdonly_directory_bg string = "124"
 
+// Define default datetime values.
+const datetime_status string = "disabled"
+const datetime_foreground string = "255"
+const datetime_background string = "023"
+
 // Define default status symbols.
 const symbol_regular string = "$"
 const symbol_super_user string = "#"
@@ -39,18 +44,19 @@ type Configuration struct {
 }
 
 type PowerColor struct {
-	UsernameFg         string       `json:"username_fg"`
-	UsernameBg         string       `json:"username_bg"`
-	HostnameFg         string       `json:"hostname_fg"`
-	HostnameBg         string       `json:"hostname_bg"`
-	HomeDirectoryFg    string       `json:"home_directory_fg"`
-	HomeDirectoryBg    string       `json:"home_directory_bg"`
-	WorkingDirectoryFg string       `json:"working_directory_fg"`
-	WorkingDirectoryBg string       `json:"working_directory_bg"`
-	RdonlyDirectoryFg  string       `json:"rdonly_directory_fg"`
-	RdonlyDirectoryBg  string       `json:"rdonly_directory_bg"`
-	Status             StatusColor  `json:"status"`
-	Symbol             StatusSymbol `json:"symbol"`
+	UsernameFg         string        `json:"username_fg"`
+	UsernameBg         string        `json:"username_bg"`
+	HostnameFg         string        `json:"hostname_fg"`
+	HostnameBg         string        `json:"hostname_bg"`
+	HomeDirectoryFg    string        `json:"home_directory_fg"`
+	HomeDirectoryBg    string        `json:"home_directory_bg"`
+	WorkingDirectoryFg string        `json:"working_directory_fg"`
+	WorkingDirectoryBg string        `json:"working_directory_bg"`
+	RdonlyDirectoryFg  string        `json:"rdonly_directory_fg"`
+	RdonlyDirectoryBg  string        `json:"rdonly_directory_bg"`
+	Status             StatusColor   `json:"status"`
+	Symbol             StatusSymbol  `json:"symbol"`
+	Datetime           ExtraDatetime `json:"datetime"`
 }
 
 type StatusColor struct {
@@ -67,6 +73,12 @@ type StatusColor struct {
 type StatusSymbol struct {
 	Regular   string `json:"regular"`
 	SuperUser string `json:"super_user"`
+}
+
+type ExtraDatetime struct {
+	Status     string `json:"status"`
+	Foreground string `json:"foreground"`
+	Background string `json:"background"`
 }
 
 func (config Configuration) Path() string {
@@ -111,6 +123,10 @@ func (config Configuration) Default() PowerColor {
 
 	pcolor.Symbol.Regular = symbol_regular
 	pcolor.Symbol.SuperUser = symbol_super_user
+
+	pcolor.Datetime.Status = datetime_status
+	pcolor.Datetime.Foreground = datetime_foreground
+	pcolor.Datetime.Background = datetime_background
 
 	return pcolor
 }
