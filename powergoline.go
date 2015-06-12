@@ -91,7 +91,7 @@ func (pogol PowerGoLine) DateTime(pcolor PowerColor) {
 		var date_time string = time.Now().Format("15:04:05")
 		var fg string = pcolor.Datetime.Foreground
 		var bg string = pcolor.Datetime.Background
-		var ubg string = pcolor.UsernameBg
+		var ubg string = pcolor.Username.Background
 
 		date_time = fmt.Sprintf(" %s ", date_time)
 		pogol.Print(date_time, fg, bg)
@@ -100,12 +100,14 @@ func (pogol PowerGoLine) DateTime(pcolor PowerColor) {
 }
 
 func (pogol PowerGoLine) Username(pcolor PowerColor) {
-	var fg string = pcolor.UsernameFg
-	var bg string = pcolor.UsernameBg
-	var hbg string = pcolor.HostnameBg
+	if pcolor.Username.Status == "enabled" {
+		var fg string = pcolor.Username.Foreground
+		var bg string = pcolor.Username.Background
+		var hbg string = pcolor.HostnameBg
 
-	pogol.Print(" \\u ", fg, bg)
-	pogol.Print("\uE0B0", bg, hbg)
+		pogol.Print(" \\u ", fg, bg)
+		pogol.Print("\uE0B0", bg, hbg)
+	}
 }
 
 func (pogol PowerGoLine) Hostname(pcolor PowerColor) {

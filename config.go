@@ -9,11 +9,16 @@ import "os"
 const config_path string = ".powergoline.json"
 const temp_file string = "_tempfile_0f060643f7.txt"
 
-// Power line default colors.
-const username_fg string = "255"
-const username_bg string = "006"
+// Define default username values.
+const username_status string = "enabled"
+const username_foreground string = "255"
+const username_background string = "006"
+
+// Define default hostname values.
 const hostname_fg string = "255"
 const hostname_bg string = "012"
+
+// Define default working directory values.
 const home_directory_fg string = "255"
 const home_directory_bg string = "161"
 const working_directory_fg string = "251"
@@ -44,8 +49,7 @@ type Configuration struct {
 }
 
 type PowerColor struct {
-	UsernameFg         string        `json:"username_fg"`
-	UsernameBg         string        `json:"username_bg"`
+	Username           ExtraUsername `json:"username"`
 	HostnameFg         string        `json:"hostname_fg"`
 	HostnameBg         string        `json:"hostname_bg"`
 	HomeDirectoryFg    string        `json:"home_directory_fg"`
@@ -57,6 +61,12 @@ type PowerColor struct {
 	Status             StatusColor   `json:"status"`
 	Symbol             StatusSymbol  `json:"symbol"`
 	Datetime           ExtraDatetime `json:"datetime"`
+}
+
+type ExtraUsername struct {
+	Status     string `json:"status"`
+	Foreground string `json:"foreground"`
+	Background string `json:"background"`
 }
 
 type StatusColor struct {
@@ -101,8 +111,10 @@ func (config Configuration) Exists() bool {
 func (config Configuration) Default() PowerColor {
 	var pcolor PowerColor
 
-	pcolor.UsernameFg = username_fg
-	pcolor.UsernameBg = username_bg
+	pcolor.Username.Status = username_status
+	pcolor.Username.Foreground = username_foreground
+	pcolor.Username.Background = username_background
+
 	pcolor.HostnameFg = hostname_fg
 	pcolor.HostnameBg = hostname_bg
 	pcolor.HomeDirectoryFg = home_directory_fg
