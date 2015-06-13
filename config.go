@@ -15,8 +15,9 @@ const username_foreground string = "255"
 const username_background string = "006"
 
 // Define default hostname values.
-const hostname_fg string = "255"
-const hostname_bg string = "012"
+const hostname_status string = "enabled"
+const hostname_foreground string = "255"
+const hostname_background string = "012"
 
 // Define default working directory values.
 const home_directory_fg string = "255"
@@ -50,8 +51,7 @@ type Configuration struct {
 
 type PowerColor struct {
 	Username           ExtraUsername `json:"username"`
-	HostnameFg         string        `json:"hostname_fg"`
-	HostnameBg         string        `json:"hostname_bg"`
+	Hostname           ExtraHostname `json:"hostname"`
 	HomeDirectoryFg    string        `json:"home_directory_fg"`
 	HomeDirectoryBg    string        `json:"home_directory_bg"`
 	WorkingDirectoryFg string        `json:"working_directory_fg"`
@@ -64,6 +64,12 @@ type PowerColor struct {
 }
 
 type ExtraUsername struct {
+	Status     string `json:"status"`
+	Foreground string `json:"foreground"`
+	Background string `json:"background"`
+}
+
+type ExtraHostname struct {
 	Status     string `json:"status"`
 	Foreground string `json:"foreground"`
 	Background string `json:"background"`
@@ -115,8 +121,10 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Username.Foreground = username_foreground
 	pcolor.Username.Background = username_background
 
-	pcolor.HostnameFg = hostname_fg
-	pcolor.HostnameBg = hostname_bg
+	pcolor.Hostname.Status = hostname_status
+	pcolor.Hostname.Foreground = hostname_foreground
+	pcolor.Hostname.Background = hostname_background
+
 	pcolor.HomeDirectoryFg = home_directory_fg
 	pcolor.HomeDirectoryBg = home_directory_bg
 	pcolor.WorkingDirectoryFg = working_directory_fg

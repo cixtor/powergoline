@@ -103,7 +103,11 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 	if pcolor.Username.Status == "enabled" {
 		var fg string = pcolor.Username.Foreground
 		var bg string = pcolor.Username.Background
-		var hbg string = pcolor.HostnameBg
+		var hbg string = pcolor.Hostname.Background
+
+		if pcolor.Hostname.Status != "enabled" {
+			hbg = pcolor.HomeDirectoryBg
+		}
 
 		pogol.Print(" \\u ", fg, bg)
 		pogol.Print("\uE0B0", bg, hbg)
@@ -111,12 +115,14 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 }
 
 func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
-	var fg string = pcolor.HostnameFg
-	var bg string = pcolor.HostnameBg
-	var hbg string = pcolor.HomeDirectoryBg
+	if pcolor.Hostname.Status == "enabled" {
+		var fg string = pcolor.Hostname.Foreground
+		var bg string = pcolor.Hostname.Background
+		var hbg string = pcolor.HomeDirectoryBg
 
-	pogol.Print(" \\h ", fg, bg)
-	pogol.Print("\uE0B0", bg, hbg)
+		pogol.Print(" \\h ", fg, bg)
+		pogol.Print("\uE0B0", bg, hbg)
+	}
 }
 
 func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
