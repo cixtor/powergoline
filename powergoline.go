@@ -106,7 +106,7 @@ func (pogol PowerGoLine) Username(pcolor PowerColor) {
 		var hbg string = pcolor.Hostname.Background
 
 		if pcolor.Hostname.Status != "enabled" {
-			hbg = pcolor.HomeDirectoryBg
+			hbg = pcolor.Directory.HomeDirectoryBg
 		}
 
 		pogol.Print(" \\u ", fg, bg)
@@ -118,7 +118,7 @@ func (pogol PowerGoLine) Hostname(pcolor PowerColor) {
 	if pcolor.Hostname.Status == "enabled" {
 		var fg string = pcolor.Hostname.Foreground
 		var bg string = pcolor.Hostname.Background
-		var hbg string = pcolor.HomeDirectoryBg
+		var hbg string = pcolor.Directory.HomeDirectoryBg
 
 		pogol.Print(" \\h ", fg, bg)
 		pogol.Print("\uE0B0", bg, hbg)
@@ -134,12 +134,12 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	var is_rdonly_dir bool = pogol.IsRdonlyDir(workingdir)
 
 	// Get configured colors.
-	var home_fg string = pcolor.HomeDirectoryFg
-	var home_bg string = pcolor.HomeDirectoryBg
-	var wd_fg string = pcolor.WorkingDirectoryFg
-	var wd_bg string = pcolor.WorkingDirectoryBg
-	var rd_fg string = pcolor.RdonlyDirectoryFg
-	var rd_bg string = pcolor.RdonlyDirectoryBg
+	var home_fg string = pcolor.Directory.HomeDirectoryFg
+	var home_bg string = pcolor.Directory.HomeDirectoryBg
+	var wd_fg string = pcolor.Directory.WorkingDirectoryFg
+	var wd_bg string = pcolor.Directory.WorkingDirectoryBg
+	var rd_fg string = pcolor.Directory.RdonlyDirectoryFg
+	var rd_bg string = pcolor.Directory.RdonlyDirectoryBg
 
 	// Print the user home directory path.
 	pogol.Print(" ~ ", home_fg, home_bg)

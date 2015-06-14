@@ -50,32 +50,30 @@ type Configuration struct {
 }
 
 type PowerColor struct {
-	Username           ExtraUsername `json:"username"`
-	Hostname           ExtraHostname `json:"hostname"`
-	HomeDirectoryFg    string        `json:"home_directory_fg"`
-	HomeDirectoryBg    string        `json:"home_directory_bg"`
-	WorkingDirectoryFg string        `json:"working_directory_fg"`
-	WorkingDirectoryBg string        `json:"working_directory_bg"`
-	RdonlyDirectoryFg  string        `json:"rdonly_directory_fg"`
-	RdonlyDirectoryBg  string        `json:"rdonly_directory_bg"`
-	Status             StatusColor   `json:"status"`
-	Symbol             StatusSymbol  `json:"symbol"`
-	Datetime           ExtraDatetime `json:"datetime"`
+	Username  StandardConfig  `json:"username"`
+	Hostname  StandardConfig  `json:"hostname"`
+	Directory DirectoryConfig `json:"directory"`
+	Status    StatusCode      `json:"status"`
+	Symbol    StatusSymbol    `json:"symbol"`
+	Datetime  StandardConfig  `json:"datetime"`
 }
 
-type ExtraUsername struct {
+type StandardConfig struct {
 	Status     string `json:"status"`
 	Foreground string `json:"foreground"`
 	Background string `json:"background"`
 }
 
-type ExtraHostname struct {
-	Status     string `json:"status"`
-	Foreground string `json:"foreground"`
-	Background string `json:"background"`
+type DirectoryConfig struct {
+	HomeDirectoryFg    string `json:"home_directory_fg"`
+	HomeDirectoryBg    string `json:"home_directory_bg"`
+	WorkingDirectoryFg string `json:"working_directory_fg"`
+	WorkingDirectoryBg string `json:"working_directory_bg"`
+	RdonlyDirectoryFg  string `json:"rdonly_directory_fg"`
+	RdonlyDirectoryBg  string `json:"rdonly_directory_bg"`
 }
 
-type StatusColor struct {
+type StatusCode struct {
 	Symbol      string `json:"symbol"`
 	Success     string `json:"success"`
 	Failure     string `json:"failure"`
@@ -89,12 +87,6 @@ type StatusColor struct {
 type StatusSymbol struct {
 	Regular   string `json:"regular"`
 	SuperUser string `json:"super_user"`
-}
-
-type ExtraDatetime struct {
-	Status     string `json:"status"`
-	Foreground string `json:"foreground"`
-	Background string `json:"background"`
 }
 
 func (config Configuration) Path() string {
@@ -125,12 +117,12 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Hostname.Foreground = hostname_foreground
 	pcolor.Hostname.Background = hostname_background
 
-	pcolor.HomeDirectoryFg = home_directory_fg
-	pcolor.HomeDirectoryBg = home_directory_bg
-	pcolor.WorkingDirectoryFg = working_directory_fg
-	pcolor.WorkingDirectoryBg = working_directory_bg
-	pcolor.RdonlyDirectoryFg = rdonly_directory_fg
-	pcolor.RdonlyDirectoryBg = rdonly_directory_bg
+	pcolor.Directory.HomeDirectoryFg = home_directory_fg
+	pcolor.Directory.HomeDirectoryBg = home_directory_bg
+	pcolor.Directory.WorkingDirectoryFg = working_directory_fg
+	pcolor.Directory.WorkingDirectoryBg = working_directory_bg
+	pcolor.Directory.RdonlyDirectoryFg = rdonly_directory_fg
+	pcolor.Directory.RdonlyDirectoryBg = rdonly_directory_bg
 
 	pcolor.Status.Symbol = status_symbol
 	pcolor.Status.Success = status_success
