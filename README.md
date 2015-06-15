@@ -28,14 +28,18 @@ The binary places a JSON file with the default configuration in the home directo
 
 * Color basic status code of executed commands.
 * Shorten long directory paths for readability.
+* Set terminal title with current directory path.
+* Display lock if current directory is read-only.
+* Change prompt symbol if super user session.
+* No follow symbolic links for brevity.
+* Display current time if enabled by user.
+* Switch to hide the username segment.
+* Switch to hide the hostname segment.
 
 ### TODO
 
-* Set terminal title with current directory path.
 * Display current CVS branch _(git, mercurial, subversion)_.
-* Display lock if current directory is not writable.
 * Display number of open processes _(all users, current user)_.
-* Change prompt symbol if super user session.
 * Support extensions for extra information.
 
 ### License
