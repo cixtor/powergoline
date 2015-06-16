@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 import "os"
-import "path"
+import "path/filepath"
 import "strings"
 import "time"
 
@@ -34,7 +34,7 @@ func (pogol PowerGoLine) Print(text string, fg string, bg string) {
 }
 
 func (pogol PowerGoLine) IsRdonlyDir(folder string) bool {
-	var temp_path string = path.Join(folder, temp_file)
+	var temp_path string = filepath.Join(folder, temp_file)
 	_, err := os.Create(temp_path)
 
 	if err != nil {
