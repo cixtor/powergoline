@@ -46,16 +46,22 @@ const status_not_found string = "014"
 const status_invalid_exit string = "202"
 const status_terminated string = "013"
 
+// CVS default colors.
+const repository_status string = "enabled"
+const repository_foreground string = "000"
+const repository_background string = "148"
+
 type Configuration struct {
 }
 
 type PowerColor struct {
-	Username  StandardConfig  `json:"username"`
-	Hostname  StandardConfig  `json:"hostname"`
-	Directory DirectoryConfig `json:"directory"`
-	Status    StatusCode      `json:"status"`
-	Symbol    StatusSymbol    `json:"symbol"`
-	Datetime  StandardConfig  `json:"datetime"`
+	Username   StandardConfig   `json:"username"`
+	Hostname   StandardConfig   `json:"hostname"`
+	Directory  DirectoryConfig  `json:"directory"`
+	Status     StatusCode       `json:"status"`
+	Symbol     StatusSymbol     `json:"symbol"`
+	Datetime   StandardConfig   `json:"datetime"`
+	Repository RepositoryConfig `json:"repository"`
 }
 
 type StandardConfig struct {
@@ -87,6 +93,14 @@ type StatusCode struct {
 type StatusSymbol struct {
 	Regular   string `json:"regular"`
 	SuperUser string `json:"super_user"`
+}
+
+type RepositoryConfig struct {
+	Mercurial RepositoryMercurial `json:"mercurial"`
+}
+
+type RepositoryMercurial struct {
+	StandardConfig
 }
 
 func (config Configuration) Path() string {
@@ -139,6 +153,10 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Datetime.Status = datetime_status
 	pcolor.Datetime.Foreground = datetime_foreground
 	pcolor.Datetime.Background = datetime_background
+
+	pcolor.Repository.Mercurial.Status = repository_status
+	pcolor.Repository.Mercurial.Foreground = repository_foreground
+	pcolor.Repository.Mercurial.Background = repository_background
 
 	return pcolor
 }

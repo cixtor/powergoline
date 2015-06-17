@@ -191,6 +191,23 @@ func (pogol PowerGoLine) WorkingDirectory(pcolor PowerColor, status string) {
 	}
 }
 
+func (pogol PowerGoLine) MercurialInformation(pcolor PowerColor, status string) {
+	if pcolor.Repository.Mercurial.Status == "enabled" {
+		var extbin ExtBinary
+		var extcolor string = pogol.ExitColor(pcolor, status)
+
+		branch, _ := extbin.MercurialBranch()
+		var fg string = pcolor.Repository.Mercurial.Foreground
+		var bg string = pcolor.Repository.Mercurial.Background
+		var branch_str string = fmt.Sprintf(" %s ", branch)
+
+		if branch != nil {
+			pogol.Print(branch_str, fg, bg)
+			pogol.Print("\uE0B0", bg, extcolor)
+		}
+	}
+}
+
 func (pogol PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
 	var symbol string
 	var uid int = os.Getuid()

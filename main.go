@@ -27,6 +27,7 @@ func main() {
 
 	var pogol PowerGoLine
 	var config Configuration
+
 	var status string = flag.Arg(0)
 	var pcolor PowerColor = config.Values()
 
@@ -35,6 +36,7 @@ func main() {
 	pogol.Username(pcolor)
 	pogol.Hostname(pcolor)
 	pogol.WorkingDirectory(pcolor, status)
+	pogol.MercurialInformation(pcolor, status)
 	pogol.RootSymbol(pcolor, status)
 
 	os.Exit(0)
