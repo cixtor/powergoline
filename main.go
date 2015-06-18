@@ -35,9 +35,11 @@ func main() {
 	pogol.DateTime(pcolor)
 	pogol.Username(pcolor)
 	pogol.Hostname(pcolor)
-	pogol.WorkingDirectory(pcolor, status)
-	pogol.MercurialInformation(pcolor, status)
+	pogol.HomeDirectory(pcolor)
+	pogol.WorkingDirectory(pcolor)
+	pogol.MercurialInformation(pcolor)
 	pogol.RootSymbol(pcolor, status)
+	pogol.PrintStatusLine()
 
 	os.Exit(0)
 }
