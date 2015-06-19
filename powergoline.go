@@ -8,6 +8,7 @@ import "time"
 
 type PowerGoLine struct {
 	Segments []Segment
+	Config   PowerColor
 }
 
 type Segment struct {
@@ -103,19 +104,19 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	 */
 
 	if status == "0" {
-		extcolor = pcolor.Status.Success
+		extcolor = pogol.Config.Status.Success
 	} else if status == "1" {
-		extcolor = pcolor.Status.Failure
+		extcolor = pogol.Config.Status.Failure
 	} else if status == "126" {
-		extcolor = pcolor.Status.Permission
+		extcolor = pogol.Config.Status.Permission
 	} else if status == "127" {
-		extcolor = pcolor.Status.NotFound
+		extcolor = pogol.Config.Status.NotFound
 	} else if status == "128" {
-		extcolor = pcolor.Status.InvalidExit
+		extcolor = pogol.Config.Status.InvalidExit
 	} else if status == "130" {
-		extcolor = pcolor.Status.Terminated
+		extcolor = pogol.Config.Status.Terminated
 	} else {
-		extcolor = pcolor.Status.Misuse
+		extcolor = pogol.Config.Status.Misuse
 	}
 
 	return extcolor
@@ -125,56 +126,56 @@ func (pogol *PowerGoLine) TermTitle() {
 	pogol.AddSegment("\\[\\e]0;\\u@\\h: \\w\\a\\]", "", "")
 }
 
-func (pogol *PowerGoLine) DateTime(pcolor PowerColor) {
-	if pcolor.Datetime.Status == "enabled" {
+func (pogol *PowerGoLine) DateTime() {
+	if pogol.Config.Datetime.Status == "enabled" {
 		var date_time string = time.Now().Format("15:04:05")
 		date_time = fmt.Sprintf(" %s ", date_time)
 
 		pogol.AddSegment(date_time,
-			pcolor.Datetime.Foreground,
-			pcolor.Datetime.Background)
+			pogol.Config.Datetime.Foreground,
+			pogol.Config.Datetime.Background)
 
 		pogol.AddSegment("\uE0B2",
-			pcolor.Username.Background,
+			pogol.Config.Username.Background,
 			"automatic")
 	}
 }
 
-func (pogol *PowerGoLine) Username(pcolor PowerColor) {
-	if pcolor.Username.Status == "enabled" {
+func (pogol *PowerGoLine) Username() {
+	if pogol.Config.Username.Status == "enabled" {
 		pogol.AddSegment(" \\u ",
-			pcolor.Username.Foreground,
-			pcolor.Username.Background)
+			pogol.Config.Username.Foreground,
+			pogol.Config.Username.Background)
 
 		pogol.AddSegment("\uE0B0",
-			pcolor.Username.Background,
+			pogol.Config.Username.Background,
 			"automatic")
 	}
 }
 
-func (pogol *PowerGoLine) Hostname(pcolor PowerColor) {
-	if pcolor.Hostname.Status == "enabled" {
+func (pogol *PowerGoLine) Hostname() {
+	if pogol.Config.Hostname.Status == "enabled" {
 		pogol.AddSegment(" \\h ",
-			pcolor.Hostname.Foreground,
-			pcolor.Hostname.Background)
+			pogol.Config.Hostname.Foreground,
+			pogol.Config.Hostname.Background)
 
 		pogol.AddSegment("\uE0B0",
-			pcolor.Hostname.Background,
+			pogol.Config.Hostname.Background,
 			"automatic")
 	}
 }
 
-func (pogol *PowerGoLine) HomeDirectory(pcolor PowerColor) {
+func (pogol *PowerGoLine) HomeDirectory() {
 	pogol.AddSegment(" ~ ",
-		pcolor.Directory.HomeDirectoryFg,
-		pcolor.Directory.HomeDirectoryBg)
+		pogol.Config.Directory.HomeDirectoryFg,
+		pogol.Config.Directory.HomeDirectoryBg)
 
 	pogol.AddSegment("\uE0B0",
-		pcolor.Directory.HomeDirectoryBg,
+		pogol.Config.Directory.HomeDirectoryBg,
 		"automatic")
 }
 
-func (pogol *PowerGoLine) WorkingDirectory(pcolor PowerColor) {
+func (pogol *PowerGoLine) WorkingDirectory() {
 	var homedir string = os.Getenv("HOME")
 	var workingdir string = os.Getenv("PWD")
 	var shortdir string = strings.Replace(workingdir, homedir, "", 1)
@@ -205,17 +206,17 @@ func (pogol *PowerGoLine) WorkingDirectory(pcolor PowerColor) {
 		if folder != "" {
 			folder = fmt.Sprintf(" %s ", folder)
 			pogol.AddSegment(folder,
-				pcolor.Directory.WorkingDirectoryFg,
-				pcolor.Directory.WorkingDirectoryBg)
+				pogol.Config.Directory.WorkingDirectoryFg,
+				pogol.Config.Directory.WorkingDirectoryBg)
 
 			if key == lastsegm {
 				pogol.AddSegment("\uE0B0",
-					pcolor.Directory.WorkingDirectoryBg,
+					pogol.Config.Directory.WorkingDirectoryBg,
 					"automatic")
 			} else {
 				pogol.AddSegment("\uE0B1",
-					pcolor.Directory.WorkingDirectoryFg,
-					pcolor.Directory.WorkingDirectoryBg)
+					pogol.Config.Directory.WorkingDirectoryFg,
+					pogol.Config.Directory.WorkingDirectoryBg)
 			}
 		}
 	}
@@ -223,45 +224,45 @@ func (pogol *PowerGoLine) WorkingDirectory(pcolor PowerColor) {
 	// Draw lock if current directory is read-only.
 	if is_rdonly_dir == true {
 		pogol.AddSegment(" \uE0A2 ",
-			pcolor.Directory.RdonlyDirectoryFg,
-			pcolor.Directory.RdonlyDirectoryBg)
+			pogol.Config.Directory.RdonlyDirectoryFg,
+			pogol.Config.Directory.RdonlyDirectoryBg)
 
 		pogol.AddSegment("\uE0B0",
-			pcolor.Directory.RdonlyDirectoryBg,
+			pogol.Config.Directory.RdonlyDirectoryBg,
 			"automatic")
 	}
 }
 
-func (pogol *PowerGoLine) MercurialInformation(pcolor PowerColor) {
-	if pcolor.Repository.Mercurial.Status == "enabled" {
+func (pogol *PowerGoLine) MercurialInformation() {
+	if pogol.Config.Repository.Mercurial.Status == "enabled" {
 		var extbin ExtBinary
 		branch, _ := extbin.MercurialBranch()
 
 		if branch != nil {
 			var branch_str string = fmt.Sprintf(" %s ", branch)
 			pogol.AddSegment(branch_str,
-				pcolor.Repository.Mercurial.Foreground,
-				pcolor.Repository.Mercurial.Background)
+				pogol.Config.Repository.Mercurial.Foreground,
+				pogol.Config.Repository.Mercurial.Background)
 
 			pogol.AddSegment("\uE0B0",
-				pcolor.Repository.Mercurial.Background,
+				pogol.Config.Repository.Mercurial.Background,
 				"automatic")
 		}
 	}
 }
 
-func (pogol *PowerGoLine) RootSymbol(pcolor PowerColor, status string) {
+func (pogol *PowerGoLine) RootSymbol(status string) {
 	var symbol string
 	var uid int = os.Getuid()
-	var extcolor string = pogol.ExitColor(pcolor, status)
+	var extcolor string = pogol.ExitColor(pogol.Config, status)
 
 	if uid == 0 {
-		symbol = pcolor.Symbol.SuperUser
+		symbol = pogol.Config.Symbol.SuperUser
 	} else {
-		symbol = pcolor.Symbol.Regular
+		symbol = pogol.Config.Symbol.Regular
 	}
 
 	symbol = fmt.Sprintf(" %s ", symbol)
-	pogol.AddSegment(symbol, pcolor.Status.Symbol, extcolor)
+	pogol.AddSegment(symbol, pogol.Config.Status.Symbol, extcolor)
 	pogol.AddSegment("\uE0B0", extcolor, "")
 }

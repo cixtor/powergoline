@@ -27,18 +27,18 @@ func main() {
 
 	var pogol PowerGoLine
 	var config Configuration
-
 	var status string = flag.Arg(0)
-	var pcolor PowerColor = config.Values()
+
+	pogol.Config = config.Values()
 
 	pogol.TermTitle()
-	pogol.DateTime(pcolor)
-	pogol.Username(pcolor)
-	pogol.Hostname(pcolor)
-	pogol.HomeDirectory(pcolor)
-	pogol.WorkingDirectory(pcolor)
-	pogol.MercurialInformation(pcolor)
-	pogol.RootSymbol(pcolor, status)
+	pogol.DateTime()
+	pogol.Username()
+	pogol.Hostname()
+	pogol.HomeDirectory()
+	pogol.WorkingDirectory()
+	pogol.MercurialInformation()
+	pogol.RootSymbol(status)
 	pogol.PrintStatusLine()
 
 	os.Exit(0)
