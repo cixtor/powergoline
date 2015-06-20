@@ -239,7 +239,23 @@ func (pogol *PowerGoLine) MercurialInformation() {
 		branch, _ := extbin.MercurialBranch()
 
 		if branch != nil {
+			status, err := extbin.MercurialStatus()
 			var branch_str string = fmt.Sprintf(" %s ", branch)
+
+			if err == nil {
+				if status["modified"] > 0 {
+					branch_str += fmt.Sprintf("~%d ", status["modified"])
+				}
+
+				if status["added"] > 0 {
+					branch_str += fmt.Sprintf("+%d ", status["added"])
+				}
+
+				if status["deleted"] > 0 {
+					branch_str += fmt.Sprintf("-%d ", status["deleted"])
+				}
+			}
+
 			pogol.AddSegment(branch_str,
 				pogol.Config.Repository.Mercurial.Foreground,
 				pogol.Config.Repository.Mercurial.Background)
