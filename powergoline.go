@@ -240,7 +240,7 @@ func (pogol *PowerGoLine) MercurialInformation() {
 
 		if branch != nil {
 			status, err := extbin.MercurialStatus()
-			var branch_str string = fmt.Sprintf(" %s ", branch)
+			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
 
 			if err == nil {
 				if status["modified"] > 0 {
