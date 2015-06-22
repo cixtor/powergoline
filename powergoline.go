@@ -233,6 +233,25 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	}
 }
 
+func (pogol *PowerGoLine) GitInformation() {
+	if pogol.Config.Repository.Git.Status == "enabled" {
+		var extbin ExtBinary
+		branch, _ := extbin.GitBranch()
+
+		if branch != nil {
+			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
+
+			pogol.AddSegment(branch_str,
+				pogol.Config.Repository.Git.Foreground,
+				pogol.Config.Repository.Git.Background)
+
+			pogol.AddSegment("\uE0B0",
+				pogol.Config.Repository.Git.Background,
+				"automatic")
+		}
+	}
+}
+
 func (pogol *PowerGoLine) MercurialInformation() {
 	if pogol.Config.Repository.Mercurial.Status == "enabled" {
 		var extbin ExtBinary

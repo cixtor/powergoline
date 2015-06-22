@@ -37,6 +37,7 @@ func main() {
 	pogol.Hostname()
 	pogol.HomeDirectory()
 	pogol.WorkingDirectory()
+	pogol.GitInformation()
 	pogol.MercurialInformation()
 	pogol.RootSymbol(status)
 	pogol.PrintStatusLine()

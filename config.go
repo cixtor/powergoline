@@ -96,11 +96,8 @@ type StatusSymbol struct {
 }
 
 type RepositoryConfig struct {
-	Mercurial RepositoryMercurial `json:"mercurial"`
-}
-
-type RepositoryMercurial struct {
-	StandardConfig
+	Git       StandardConfig `json:"git"`
+	Mercurial StandardConfig `json:"mercurial"`
 }
 
 func (config Configuration) Path() string {
@@ -154,6 +151,9 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Datetime.Foreground = datetime_foreground
 	pcolor.Datetime.Background = datetime_background
 
+	pcolor.Repository.Git.Status = repository_status
+	pcolor.Repository.Git.Foreground = repository_foreground
+	pcolor.Repository.Git.Background = repository_background
 	pcolor.Repository.Mercurial.Status = repository_status
 	pcolor.Repository.Mercurial.Foreground = repository_foreground
 	pcolor.Repository.Mercurial.Background = repository_background
