@@ -35,11 +35,12 @@ The binary places a JSON file with the default configuration in the home directo
 * Display current time if enabled by user.
 * Switch to hide the username segment.
 * Switch to hide the hostname segment.
+* Branch and status info for Git repository.
 * Branch and status info for Mercurial repository.
 
 ### TODO
 
-* Display current CVS branch _(git, subversion)_.
+* Display current CVS branch _(subversion)_.
 * Display number of open processes _(all users, current user)_.
 * Support extensions for extra information.
 

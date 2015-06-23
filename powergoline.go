@@ -239,7 +239,22 @@ func (pogol *PowerGoLine) GitInformation() {
 		branch, _ := extbin.GitBranch()
 
 		if branch != nil {
+			status, err := extbin.GitStatus()
 			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
+
+			if err == nil {
+				if status["modified"] > 0 {
+					branch_str += fmt.Sprintf("~%d ", status["modified"])
+				}
+
+				if status["added"] > 0 {
+					branch_str += fmt.Sprintf("+%d ", status["added"])
+				}
+
+				if status["deleted"] > 0 {
+					branch_str += fmt.Sprintf("-%d ", status["deleted"])
+				}
+			}
 
 			pogol.AddSegment(branch_str,
 				pogol.Config.Repository.Git.Foreground,
