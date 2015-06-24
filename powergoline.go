@@ -181,6 +181,7 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	var shortdir string = strings.Replace(workingdir, homedir, "", 1)
 	var cleandir string = strings.Trim(shortdir, "/")
 	var is_rdonly_dir bool = pogol.IsRdonlyDir(workingdir)
+	var print_home_dir int = strings.Index(workingdir, homedir)
 
 	// Draw the sequence of folders of the current path.
 	var maxsegms int = 4
@@ -199,6 +200,11 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 
 		dirparts = newparts
 		lastsegm = maxsegms
+	}
+
+	// Print home directory segment if necessary.
+	if print_home_dir == 0 {
+		pogol.HomeDirectory()
 	}
 
 	// Draw each directory segment with right arrow.

@@ -35,7 +35,6 @@ func main() {
 	pogol.DateTime()
 	pogol.Username()
 	pogol.Hostname()
-	pogol.HomeDirectory()
 	pogol.WorkingDirectory()
 	pogol.GitInformation()
 	pogol.MercurialInformation()
