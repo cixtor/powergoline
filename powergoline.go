@@ -1,10 +1,13 @@
 package main
 
-import "fmt"
-import "os"
-import "path/filepath"
-import "strings"
-import "time"
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+)
 
 type PowerGoLine struct {
 	Segments []Segment
@@ -184,20 +187,23 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	var print_home_dir int = strings.Index(workingdir, homedir)
 
 	// Draw the sequence of folders of the current path.
-	var maxsegms int = 4
 	var dirparts []string = strings.Split(cleandir, "/")
 	var ttlparts int = len(dirparts)
 	var lastsegm int = (ttlparts - 1)
 
+	// Determine the maximum number of directory segments.
+	maxsegms, _ := strconv.Atoi(pogol.Config.Directory.MaximumSegments)
+	if maxsegms < 1 {
+		maxsegms = 1
+	}
+
 	if ttlparts > maxsegms {
 		var newparts []string = make([]string, 0)
-
-		newparts = append(newparts, dirparts[0])
+		var offset int = (maxsegms - 1)
 		newparts = append(newparts, "\u2026")
-		newparts = append(newparts, dirparts[lastsegm-2])
-		newparts = append(newparts, dirparts[lastsegm-1])
-		newparts = append(newparts, dirparts[lastsegm])
-
+		for k := offset; k >= 0; k-- {
+			newparts = append(newparts, dirparts[lastsegm-k])
+		}
 		dirparts = newparts
 		lastsegm = maxsegms
 	}

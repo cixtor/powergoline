@@ -20,6 +20,7 @@ const hostname_foreground string = "255"
 const hostname_background string = "012"
 
 // Define default working directory values.
+const maximum_segments string = "2"
 const home_directory_fg string = "255"
 const home_directory_bg string = "161"
 const working_directory_fg string = "251"
@@ -71,6 +72,7 @@ type StandardConfig struct {
 }
 
 type DirectoryConfig struct {
+	MaximumSegments    string `json:"maximum_segments"`
 	HomeDirectoryFg    string `json:"home_directory_fg"`
 	HomeDirectoryBg    string `json:"home_directory_bg"`
 	WorkingDirectoryFg string `json:"working_directory_fg"`
@@ -128,6 +130,7 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Hostname.Foreground = hostname_foreground
 	pcolor.Hostname.Background = hostname_background
 
+	pcolor.Directory.MaximumSegments = maximum_segments
 	pcolor.Directory.HomeDirectoryFg = home_directory_fg
 	pcolor.Directory.HomeDirectoryBg = home_directory_bg
 	pcolor.Directory.WorkingDirectoryFg = working_directory_fg
