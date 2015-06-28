@@ -1,0 +1,39 @@
+{
+    "username": {
+        "status": "enabled",
+        "foreground": "236",
+        "background": "203"
+    },
+    "hostname": {
+        "status": "enabled",
+        "foreground": "236",
+        "background": "208"
+    },
+    "directory": {
+        "home_directory_fg": "236",
+        "home_directory_bg": "226",
+        "working_directory_fg": "251",
+        "working_directory_bg": "238",
+        "rdonly_directory_fg": "255",
+        "rdonly_directory_bg": "124"
+    },
+    "status": {
+        "symbol": "255",
+        "success": "099",
+        "failure": "001",
+        "misuse": "003",
+        "permission": "004",
+        "not_found": "014",
+        "invalid_exit": "202",
+        "terminated": "240"
+    },
+    "symbol": {
+        "regular": "$",
+        "super_user": "#"
+    },
+    "datetime": {
+        "status": "disabled",
+        "foreground": "255",
+        "background": "023"
+    }
+}
