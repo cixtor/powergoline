@@ -138,9 +138,9 @@ func (pogol *PowerGoLine) DateTime() {
 			pogol.Config.Datetime.Foreground,
 			pogol.Config.Datetime.Background)
 
-		pogol.AddSegment("\uE0B2",
-			pogol.Config.Username.Background,
-			"automatic")
+		pogol.AddSegment("\uE0B0",
+			pogol.Config.Datetime.Background,
+			pogol.Config.Username.Background)
 	}
 }
 
