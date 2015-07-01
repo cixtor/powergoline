@@ -1,9 +1,11 @@
 package main
 
-import "encoding/json"
-import "fmt"
-import "io/ioutil"
-import "os"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+)
 
 // External configuration file path.
 const config_path string = ".powergoline.json"
@@ -51,6 +53,8 @@ const status_terminated string = "013"
 const repository_status string = "enabled"
 const repository_foreground string = "000"
 const repository_background string = "148"
+const repository_committed_bg string = "214"
+const repository_untracked_bg string = "175"
 
 type Configuration struct {
 }
@@ -97,9 +101,15 @@ type StatusSymbol struct {
 	SuperUser string `json:"super_user"`
 }
 
+type RepositoryExtraConfig struct {
+	StandardConfig
+	CommittedBg string `json:"committed_bg"`
+	UntrackedBg string `json:"untracked_bg"`
+}
+
 type RepositoryConfig struct {
-	Git       StandardConfig `json:"git"`
-	Mercurial StandardConfig `json:"mercurial"`
+	Git       RepositoryExtraConfig `json:"git"`
+	Mercurial RepositoryExtraConfig `json:"mercurial"`
 }
 
 func (config Configuration) Path() string {
@@ -157,9 +167,14 @@ func (config Configuration) Default() PowerColor {
 	pcolor.Repository.Git.Status = repository_status
 	pcolor.Repository.Git.Foreground = repository_foreground
 	pcolor.Repository.Git.Background = repository_background
+	pcolor.Repository.Git.CommittedBg = repository_committed_bg
+	pcolor.Repository.Git.UntrackedBg = repository_untracked_bg
+
 	pcolor.Repository.Mercurial.Status = repository_status
 	pcolor.Repository.Mercurial.Foreground = repository_foreground
 	pcolor.Repository.Mercurial.Background = repository_background
+	pcolor.Repository.Git.CommittedBg = repository_committed_bg
+	pcolor.Repository.Git.UntrackedBg = repository_untracked_bg
 
 	return pcolor
 }

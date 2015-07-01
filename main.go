@@ -19,8 +19,10 @@
 
 package main
 
-import "flag"
-import "os"
+import (
+	"flag"
+	"os"
+)
 
 func main() {
 	flag.Parse()

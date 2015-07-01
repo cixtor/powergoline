@@ -1,10 +1,12 @@
 package main
 
-import "bytes"
-import "errors"
-import "os/exec"
-import "regexp"
-import "strings"
+import (
+	"bytes"
+	"errors"
+	"os/exec"
+	"regexp"
+	"strings"
+)
 
 type ExtBinary struct {
 }
@@ -61,6 +63,32 @@ func (extbin ExtBinary) GitStatus() (map[string]int, error) {
 	stats["modified"] = modified_files
 	stats["deleted"] = deleted_files
 	stats["added"] = added_files
+
+	return stats, nil
+}
+
+func (extbin ExtBinary) GitStatusExtra() (map[string]bool, error) {
+	kommand := exec.Command("git", "status", "--ignore-submodules")
+	response, err := kommand.CombinedOutput()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(response) == 0 {
+		return nil, errors.New("output is empty")
+	}
+
+	var output string = string(response)
+	var nothing bool = strings.Contains(output, "nothing to commit")
+	var committed bool = strings.Contains(output, "Changes to be committed:")
+	var untracked bool = strings.Contains(output, "Untracked files:")
+
+	var stats = map[string]bool{
+		"nothing":   nothing,
+		"committed": committed,
+		"untracked": untracked,
+	}
 
 	return stats, nil
 }

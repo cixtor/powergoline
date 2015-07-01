@@ -268,13 +268,20 @@ func (pogol *PowerGoLine) GitInformation() {
 				}
 			}
 
-			pogol.AddSegment(branch_str,
-				pogol.Config.Repository.Git.Foreground,
-				pogol.Config.Repository.Git.Background)
+			extra, err := extbin.GitStatusExtra()
+			var foreground string = pogol.Config.Repository.Git.Foreground
+			var background string = pogol.Config.Repository.Git.Background
 
-			pogol.AddSegment("\uE0B0",
-				pogol.Config.Repository.Git.Background,
-				"automatic")
+			if err == nil {
+				if extra["committed"] {
+					background = pogol.Config.Repository.Git.CommittedBg
+				} else if extra["untracked"] {
+					background = pogol.Config.Repository.Git.UntrackedBg
+				}
+			}
+
+			pogol.AddSegment(branch_str, foreground, background)
+			pogol.AddSegment("\uE0B0", background, "automatic")
 		}
 	}
 }
