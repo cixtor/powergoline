@@ -41,12 +41,16 @@
         "git": {
             "status": "enabled",
             "foreground": "000",
-            "background": "148"
+            "background": "148",
+            "committed_bg": "214",
+            "untracked_bg": "175"
         },
         "mercurial": {
             "status": "enabled",
             "foreground": "000",
-            "background": "148"
+            "background": "148",
+            "committed_bg": "214",
+            "untracked_bg": "175"
         }
     }
 }
