@@ -5,10 +5,18 @@ import (
 	"errors"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 type ExtBinary struct {
+}
+
+type RepositoryStatus struct {
+	Nothing      bool
+	Committed    bool
+	Untracked    bool
+	AheadCommits int
 }
 
 func (extbin ExtBinary) GitBranch() ([]byte, error) {
@@ -67,27 +75,31 @@ func (extbin ExtBinary) GitStatus() (map[string]int, error) {
 	return stats, nil
 }
 
-func (extbin ExtBinary) GitStatusExtra() (map[string]bool, error) {
+func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
+	var stats RepositoryStatus
 	kommand := exec.Command("git", "status", "--ignore-submodules")
 	response, err := kommand.CombinedOutput()
 
 	if err != nil {
-		return nil, err
+		return stats, err
 	}
 
 	if len(response) == 0 {
-		return nil, errors.New("output is empty")
+		return stats, errors.New("output is empty")
 	}
 
 	var output string = string(response)
-	var nothing bool = strings.Contains(output, "nothing to commit")
-	var committed bool = strings.Contains(output, "Changes to be committed:")
-	var untracked bool = strings.Contains(output, "Untracked files:")
+	stats.Nothing = strings.Contains(output, "nothing to commit")
+	stats.Committed = strings.Contains(output, "Changes to be committed:")
+	stats.Untracked = strings.Contains(output, "Untracked files:")
 
-	var stats = map[string]bool{
-		"nothing":   nothing,
-		"committed": committed,
-		"untracked": untracked,
+	pattern := regexp.MustCompile(`ahead of .+ by ([0-9]+) commits`)
+	var commits []string = pattern.FindStringSubmatch(output)
+	if commits != nil {
+		number, err := strconv.Atoi(commits[1])
+		if err == nil {
+			stats.AheadCommits = number
+		}
 	}
 
 	return stats, nil

@@ -251,32 +251,36 @@ func (pogol *PowerGoLine) GitInformation() {
 		branch, _ := extbin.GitBranch()
 
 		if branch != nil {
-			status, err := extbin.GitStatus()
-			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
-
-			if err == nil {
-				if status["modified"] > 0 {
-					branch_str += fmt.Sprintf("~%d ", status["modified"])
-				}
-
-				if status["added"] > 0 {
-					branch_str += fmt.Sprintf("+%d ", status["added"])
-				}
-
-				if status["deleted"] > 0 {
-					branch_str += fmt.Sprintf("-%d ", status["deleted"])
-				}
-			}
-
 			extra, err := extbin.GitStatusExtra()
+			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
 			var foreground string = pogol.Config.Repository.Git.Foreground
 			var background string = pogol.Config.Repository.Git.Background
 
 			if err == nil {
-				if extra["committed"] {
+				if extra.Committed {
 					background = pogol.Config.Repository.Git.CommittedBg
-				} else if extra["untracked"] {
+				} else if extra.Untracked {
 					background = pogol.Config.Repository.Git.UntrackedBg
+				}
+
+				if extra.AheadCommits > 0 {
+					branch_str += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
+				}
+
+				status, err := extbin.GitStatus()
+
+				if err == nil {
+					if status["modified"] > 0 {
+						branch_str += fmt.Sprintf("~%d ", status["modified"])
+					}
+
+					if status["added"] > 0 {
+						branch_str += fmt.Sprintf("+%d ", status["added"])
+					}
+
+					if status["deleted"] > 0 {
+						branch_str += fmt.Sprintf("-%d ", status["deleted"])
+					}
 				}
 			}
 
