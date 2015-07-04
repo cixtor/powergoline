@@ -265,6 +265,8 @@ func (pogol *PowerGoLine) GitInformation() {
 
 				if extra.AheadCommits > 0 {
 					branch_str += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
+				} else if extra.BehindCommits > 0 {
+					branch_str += fmt.Sprintf("\u21E3%d ", extra.BehindCommits)
 				}
 
 				status, err := extbin.GitStatus()

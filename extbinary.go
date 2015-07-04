@@ -13,10 +13,11 @@ type ExtBinary struct {
 }
 
 type RepositoryStatus struct {
-	Nothing      bool
-	Committed    bool
-	Untracked    bool
-	AheadCommits int
+	Nothing       bool
+	Committed     bool
+	Untracked     bool
+	AheadCommits  int
+	BehindCommits int
 }
 
 func (extbin ExtBinary) GitBranch() ([]byte, error) {
@@ -93,12 +94,16 @@ func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 	stats.Committed = strings.Contains(output, "Changes to be committed:")
 	stats.Untracked = strings.Contains(output, "Untracked files:")
 
-	pattern := regexp.MustCompile(`ahead of .+ by ([0-9]+) commits`)
+	pattern := regexp.MustCompile(`(ahead|behind) of .+ by ([0-9]+) commits`)
 	var commits []string = pattern.FindStringSubmatch(output)
 	if commits != nil {
-		number, err := strconv.Atoi(commits[1])
+		number, err := strconv.Atoi(commits[2])
 		if err == nil {
-			stats.AheadCommits = number
+			if commits[1] == "ahead" {
+				stats.AheadCommits = number
+			} else if commits[1] == "behind" {
+				stats.BehindCommits = number
+			}
 		}
 	}
 
