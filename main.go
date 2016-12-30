@@ -1,6 +1,6 @@
 /**
- * Power Go Line
- * http://cixtor.com/
+ * PowerGoLine
+ * https://cixtor.com/
  * https://github.com/cixtor/powergoline
  * https://en.wikipedia.org/wiki/Status_bar
  *
