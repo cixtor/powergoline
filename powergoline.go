@@ -9,17 +9,29 @@ import (
 	"time"
 )
 
+const enabled string = "enabled"
+const tempPath string = "_tempfile_0f060643f7.txt"
+
+// PowerGoLine holds the configuration either defined by the current user in the
+// TTY session or the default settings defined by the program on startup. It
+// also holds the bytes that will be printed in the command line prompt in the
+// form of segments.
 type PowerGoLine struct {
 	Segments []Segment
 	Config   PowerColor
 }
 
+// Segment represents one single part in the command line prompt. Each segment
+// contains the text and color for the foreground and background of that text.
+// Notice that most segments have a spacing on the left and right side to keep
+// things in shape.
 type Segment struct {
 	Text       string
 	Foreground string
 	Background string
 }
 
+// AddSegment inserts a new block in the CLI prompt output.
 func (pogol *PowerGoLine) AddSegment(text string, fg string, bg string) {
 	var segment Segment
 
@@ -30,23 +42,24 @@ func (pogol *PowerGoLine) AddSegment(text string, fg string, bg string) {
 	pogol.Segments = append(pogol.Segments, segment)
 }
 
+// Print sends a segment to the standard output.
 func (pogol PowerGoLine) Print(text string, fg string, bg string) {
-	var color_seq string
+	var colorSeq string
 
 	// Add the foreground and background colors.
 	if fg != "" && bg != "" {
-		color_seq += fmt.Sprintf("38;5;%s", fg)
-		color_seq += fmt.Sprintf(";")
-		color_seq += fmt.Sprintf("48;5;%s", bg)
+		colorSeq += fmt.Sprintf("38;5;%s", fg)
+		colorSeq += fmt.Sprintf(";")
+		colorSeq += fmt.Sprintf("48;5;%s", bg)
 	} else if fg != "" {
-		color_seq += fmt.Sprintf("38;5;%s", fg)
+		colorSeq += fmt.Sprintf("38;5;%s", fg)
 	} else if bg != "" {
-		color_seq += fmt.Sprintf("48;5;%s", bg)
+		colorSeq += fmt.Sprintf("48;5;%s", bg)
 	}
 
 	// Draw the color sequences if necessary.
-	if len(color_seq) > 0 {
-		fmt.Printf("\\[\\e[%sm\\]", color_seq)
+	if len(colorSeq) > 0 {
+		fmt.Printf("\\[\\e[%sm\\]", colorSeq)
 		fmt.Printf("%s", text)
 		fmt.Printf("\\[\\e[0m\\]")
 	} else {
@@ -54,11 +67,13 @@ func (pogol PowerGoLine) Print(text string, fg string, bg string) {
 	}
 }
 
+// PrintStatusLine sends all the segments to the standard output.
 func (pogol PowerGoLine) PrintStatusLine() {
 	var key int
 	var current Segment
 	var nextsegm Segment
-	var ttlsegms int = len(pogol.Segments)
+
+	ttlsegms := len(pogol.Segments)
 
 	for key = 0; key < ttlsegms; key++ {
 		current = pogol.Segments[key]
@@ -76,18 +91,23 @@ func (pogol PowerGoLine) PrintStatusLine() {
 	fmt.Printf("\u0020\n")
 }
 
+// IsRdonlyDir checks if a directory is read only by the current user.
 func (pogol PowerGoLine) IsRdonlyDir(folder string) bool {
-	var temp_path string = filepath.Join(folder, temp_file)
-	_, err := os.Create(temp_path)
+	path := filepath.Join(folder, tempPath)
+	_, err := os.Create(path)
 
 	if err != nil {
 		return true
 	}
 
-	os.Remove(temp_path)
+	if err := os.Remove(path); err != nil {
+		return false
+	}
+
 	return false
 }
 
+// ExitColor determines the color for the result of each previous command.
 func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	var extcolor string
 
@@ -125,16 +145,15 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	return extcolor
 }
 
+// TermTitle defines the template for the terminal title.
 func (pogol *PowerGoLine) TermTitle() {
 	pogol.AddSegment("\\[\\e]0;\\u@\\h: \\w\\a\\]", "", "")
 }
 
+// DateTime defines a segment with the current date and time.
 func (pogol *PowerGoLine) DateTime() {
-	if pogol.Config.Datetime.Status == "enabled" {
-		var date_time string = time.Now().Format("15:04:05")
-		date_time = fmt.Sprintf(" %s ", date_time)
-
-		pogol.AddSegment(date_time,
+	if pogol.Config.Datetime.Status == enabled {
+		pogol.AddSegment("\x20"+time.Now().Format("15:04:05")+"\x20",
 			pogol.Config.Datetime.Foreground,
 			pogol.Config.Datetime.Background)
 
@@ -144,8 +163,9 @@ func (pogol *PowerGoLine) DateTime() {
 	}
 }
 
+// Username defines a segment with the name of the current account.
 func (pogol *PowerGoLine) Username() {
-	if pogol.Config.Username.Status == "enabled" {
+	if pogol.Config.Username.Status == enabled {
 		pogol.AddSegment(" \\u ",
 			pogol.Config.Username.Foreground,
 			pogol.Config.Username.Background)
@@ -156,8 +176,9 @@ func (pogol *PowerGoLine) Username() {
 	}
 }
 
+// Hostname defines a segment with the name of this system.
 func (pogol *PowerGoLine) Hostname() {
-	if pogol.Config.Hostname.Status == "enabled" {
+	if pogol.Config.Hostname.Status == enabled {
 		pogol.AddSegment(" \\h ",
 			pogol.Config.Hostname.Foreground,
 			pogol.Config.Hostname.Background)
@@ -168,6 +189,7 @@ func (pogol *PowerGoLine) Hostname() {
 	}
 }
 
+// HomeDirectory defines a segment with current directory path.
 func (pogol *PowerGoLine) HomeDirectory() {
 	pogol.AddSegment(" ~ ",
 		pogol.Config.Directory.HomeDirectoryFg,
@@ -178,18 +200,17 @@ func (pogol *PowerGoLine) HomeDirectory() {
 		"automatic")
 }
 
+// WorkingDirectory returns the full path of the current directory.
 func (pogol *PowerGoLine) WorkingDirectory() {
-	var homedir string = os.Getenv("HOME")
-	var workingdir string = os.Getenv("PWD")
-	var shortdir string = strings.Replace(workingdir, homedir, "", 1)
-	var cleandir string = strings.Trim(shortdir, "/")
-	var is_rdonly_dir bool = pogol.IsRdonlyDir(workingdir)
-	var print_home_dir int = strings.Index(workingdir, homedir)
+	homedir := os.Getenv("HOME")
+	workingdir := os.Getenv("PWD")
+	shortdir := strings.Replace(workingdir, homedir, "", 1)
+	cleandir := strings.Trim(shortdir, "/")
 
 	// Draw the sequence of folders of the current path.
-	var dirparts []string = strings.Split(cleandir, "/")
-	var ttlparts int = len(dirparts)
-	var lastsegm int = (ttlparts - 1)
+	dirparts := strings.Split(cleandir, "/")
+	ttlparts := len(dirparts)
+	lastsegm := (ttlparts - 1)
 
 	// Determine the maximum number of directory segments.
 	maxsegms, _ := strconv.Atoi(pogol.Config.Directory.MaximumSegments)
@@ -198,8 +219,8 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	}
 
 	if ttlparts > maxsegms {
-		var newparts []string = make([]string, 0)
-		var offset int = (maxsegms - 1)
+		newparts := make([]string, 0)
+		offset := (maxsegms - 1)
 		newparts = append(newparts, "\u2026")
 		for k := offset; k >= 0; k-- {
 			newparts = append(newparts, dirparts[lastsegm-k])
@@ -209,7 +230,7 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	}
 
 	// Print home directory segment if necessary.
-	if print_home_dir == 0 {
+	if strings.Index(workingdir, homedir) == 0 {
 		pogol.HomeDirectory()
 	}
 
@@ -234,7 +255,7 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	}
 
 	// Draw lock if current directory is read-only.
-	if is_rdonly_dir == true {
+	if pogol.IsRdonlyDir(workingdir) {
 		pogol.AddSegment(" \uE0A2 ",
 			pogol.Config.Directory.RdonlyDirectoryFg,
 			pogol.Config.Directory.RdonlyDirectoryBg)
@@ -245,16 +266,18 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	}
 }
 
+// GitInformation defines a segment with information of a Git repository.
 func (pogol *PowerGoLine) GitInformation() {
-	if pogol.Config.Repository.Git.Status == "enabled" {
+	if pogol.Config.Repository.Git.Status == enabled {
 		var extbin ExtBinary
+
 		branch, _ := extbin.GitBranch()
 
 		if branch != nil {
 			extra, err := extbin.GitStatusExtra()
-			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
-			var foreground string = pogol.Config.Repository.Git.Foreground
-			var background string = pogol.Config.Repository.Git.Background
+			branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
+			foreground := pogol.Config.Repository.Git.Foreground
+			background := pogol.Config.Repository.Git.Background
 
 			if err == nil {
 				if extra.Committed {
@@ -264,58 +287,60 @@ func (pogol *PowerGoLine) GitInformation() {
 				}
 
 				if extra.AheadCommits > 0 {
-					branch_str += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
+					branchName += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
 				} else if extra.BehindCommits > 0 {
-					branch_str += fmt.Sprintf("\u21E3%d ", extra.BehindCommits)
+					branchName += fmt.Sprintf("\u21E3%d ", extra.BehindCommits)
 				}
 
 				status, err := extbin.GitStatus()
 
 				if err == nil {
 					if status["modified"] > 0 {
-						branch_str += fmt.Sprintf("~%d ", status["modified"])
+						branchName += fmt.Sprintf("~%d ", status["modified"])
 					}
 
 					if status["added"] > 0 {
-						branch_str += fmt.Sprintf("+%d ", status["added"])
+						branchName += fmt.Sprintf("+%d ", status["added"])
 					}
 
 					if status["deleted"] > 0 {
-						branch_str += fmt.Sprintf("-%d ", status["deleted"])
+						branchName += fmt.Sprintf("-%d ", status["deleted"])
 					}
 				}
 			}
 
-			pogol.AddSegment(branch_str, foreground, background)
+			pogol.AddSegment(branchName, foreground, background)
 			pogol.AddSegment("\uE0B0", background, "automatic")
 		}
 	}
 }
 
+// MercurialInformation defines a segment with information of a Mercurial repository.
 func (pogol *PowerGoLine) MercurialInformation() {
-	if pogol.Config.Repository.Mercurial.Status == "enabled" {
+	if pogol.Config.Repository.Mercurial.Status == enabled {
 		var extbin ExtBinary
+
 		branch, _ := extbin.MercurialBranch()
 
 		if branch != nil {
 			status, err := extbin.MercurialStatus()
-			var branch_str string = fmt.Sprintf(" \uE0A0 %s ", branch)
+			branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
 
 			if err == nil {
 				if status["modified"] > 0 {
-					branch_str += fmt.Sprintf("~%d ", status["modified"])
+					branchName += fmt.Sprintf("~%d ", status["modified"])
 				}
 
 				if status["added"] > 0 {
-					branch_str += fmt.Sprintf("+%d ", status["added"])
+					branchName += fmt.Sprintf("+%d ", status["added"])
 				}
 
 				if status["deleted"] > 0 {
-					branch_str += fmt.Sprintf("-%d ", status["deleted"])
+					branchName += fmt.Sprintf("-%d ", status["deleted"])
 				}
 			}
 
-			pogol.AddSegment(branch_str,
+			pogol.AddSegment(branchName,
 				pogol.Config.Repository.Mercurial.Foreground,
 				pogol.Config.Repository.Mercurial.Background)
 
@@ -326,10 +351,12 @@ func (pogol *PowerGoLine) MercurialInformation() {
 	}
 }
 
+// RootSymbol defines a segment with an indicator for root users.
 func (pogol *PowerGoLine) RootSymbol(status string) {
 	var symbol string
-	var uid int = os.Getuid()
-	var extcolor string = pogol.ExitColor(pogol.Config, status)
+
+	uid := os.Getuid()
+	extcolor := pogol.ExitColor(pogol.Config, status)
 
 	if uid == 0 {
 		symbol = pogol.Config.Symbol.SuperUser

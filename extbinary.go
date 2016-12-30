@@ -9,9 +9,17 @@ import (
 	"strings"
 )
 
-type ExtBinary struct {
-}
+// ExtBinary encapsulates the methods that spawn the execution of external
+// binaries like the control version repository tools among others that
+// facilitate the popullation of the command line prompt. Additional methods can
+// be attached following the same template as the original interface.
+type ExtBinary struct{}
 
+// RepositoryStatus holds the information of the current state of a repository,
+// this includes the number of untracked files, number of commits ahead from
+// remote, number of commits behind compared to the state of the remote
+// repository, and nothing in case the state of the local repository is the same
+// as the remote version.
 type RepositoryStatus struct {
 	Nothing       bool
 	Committed     bool
@@ -20,21 +28,22 @@ type RepositoryStatus struct {
 	BehindCommits int
 }
 
+// GitBranch returns the name of the current Git branch.
 func (extbin ExtBinary) GitBranch() ([]byte, error) {
-	kommand := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	response, err := kommand.CombinedOutput()
+	response, err := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").CombinedOutput()
 
 	if err != nil {
 		return nil, err
 	}
 
 	response = bytes.Trim(response, "\n")
+
 	return response, nil
 }
 
+// GitStatus returns information about the current state of a Git repository.
 func (extbin ExtBinary) GitStatus() (map[string]int, error) {
-	kommand := exec.Command("git", "status", "--porcelain", "--ignore-submodules")
-	response, err := kommand.CombinedOutput()
+	response, err := exec.Command("git", "status", "--porcelain", "--ignore-submodules").CombinedOutput()
 
 	if err != nil {
 		return nil, err
@@ -44,42 +53,44 @@ func (extbin ExtBinary) GitStatus() (map[string]int, error) {
 		return nil, errors.New("output is empty")
 	}
 
+	output := string(response)
+	stats := make(map[string]int)
 	regex := regexp.MustCompile(`^(A\s|\sM|\sD|\?\?) .+`)
-	var output string = string(response)
-	var lines []string = strings.Split(output, "\n")
-	var modified_files int = 0
-	var deleted_files int = 0
-	var added_files int = 0
-	var stats = make(map[string]int)
+	lines := strings.Split(output, "\n")
+
+	var modifiedFiles int
+	var deletedFiles int
+	var addedFiles int
 
 	for _, line := range lines {
 		if line != "" {
-			var match []string = regex.FindStringSubmatch(line)
+			match := regex.FindStringSubmatch(line)
 
 			if len(match) > 0 {
 				switch match[1] {
 				case " M":
-					modified_files += 1
+					modifiedFiles++
 				case " D":
-					deleted_files += 1
+					deletedFiles++
 				case "A ", "??":
-					added_files += 1
+					addedFiles++
 				}
 			}
 		}
 	}
 
-	stats["modified"] = modified_files
-	stats["deleted"] = deleted_files
-	stats["added"] = added_files
+	stats["modified"] = modifiedFiles
+	stats["deleted"] = deletedFiles
+	stats["added"] = addedFiles
 
 	return stats, nil
 }
 
+// GitStatusExtra includes additional information to the GitStatus output.
 func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 	var stats RepositoryStatus
-	kommand := exec.Command("git", "status", "--ignore-submodules")
-	response, err := kommand.CombinedOutput()
+
+	response, err := exec.Command("git", "status", "--ignore-submodules").CombinedOutput()
 
 	if err != nil {
 		return stats, err
@@ -89,14 +100,15 @@ func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 		return stats, errors.New("output is empty")
 	}
 
-	var output string = string(response)
+	output := string(response)
+
 	stats.Nothing = strings.Contains(output, "nothing to commit")
 	stats.Committed = strings.Contains(output, "Changes to be committed:")
 	stats.Untracked = strings.Contains(output, "Untracked files:")
 
 	pattern := regexp.MustCompile(`(ahead|behind) of .+ by ([0-9]+) commits`)
-	var commits []string = pattern.FindStringSubmatch(output)
-	if commits != nil {
+
+	if commits := pattern.FindStringSubmatch(output); commits != nil {
 		number, err := strconv.Atoi(commits[2])
 		if err == nil {
 			if commits[1] == "ahead" {
@@ -110,21 +122,22 @@ func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 	return stats, nil
 }
 
+// MercurialBranch returns the name of the current Mercurial branch.
 func (extbin ExtBinary) MercurialBranch() ([]byte, error) {
-	kommand := exec.Command("hg", "branch")
-	response, err := kommand.CombinedOutput()
+	response, err := exec.Command("hg", "branch").CombinedOutput()
 
 	if err != nil {
 		return nil, err
 	}
 
 	response = bytes.Trim(response, "\n")
+
 	return response, nil
 }
 
+// MercurialStatus returns information about the current state of a Mercurial repository.
 func (extbin ExtBinary) MercurialStatus() (map[string]int, error) {
-	kommand := exec.Command("hg", "status")
-	response, err := kommand.CombinedOutput()
+	response, err := exec.Command("hg", "status").CombinedOutput()
 
 	if err != nil {
 		return nil, err
@@ -135,33 +148,35 @@ func (extbin ExtBinary) MercurialStatus() (map[string]int, error) {
 	}
 
 	regex := regexp.MustCompile(`^(A|M|R|\!|\?) .+`)
-	var output string = string(response)
-	var lines []string = strings.Split(output, "\n")
-	var modified_files int = 0
-	var deleted_files int = 0
-	var added_files int = 0
-	var stats = make(map[string]int)
+
+	stats := make(map[string]int)
+	output := string(response)
+	lines := strings.Split(output, "\n")
+
+	var modifiedFiles int
+	var deletedFiles int
+	var addedFiles int
 
 	for _, line := range lines {
 		if line != "" {
-			var match []string = regex.FindStringSubmatch(line)
+			match := regex.FindStringSubmatch(line)
 
 			if len(match) > 0 {
 				switch match[1] {
 				case "M":
-					modified_files += 1
+					modifiedFiles++
 				case "R", "!":
-					deleted_files += 1
+					deletedFiles++
 				case "A", "?":
-					added_files += 1
+					addedFiles++
 				}
 			}
 		}
 	}
 
-	stats["modified"] = modified_files
-	stats["deleted"] = deleted_files
-	stats["added"] = added_files
+	stats["modified"] = modifiedFiles
+	stats["deleted"] = deletedFiles
+	stats["added"] = addedFiles
 
 	return stats, nil
 }

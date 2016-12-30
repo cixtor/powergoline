@@ -29,7 +29,6 @@ func main() {
 
 	var pogol PowerGoLine
 	var config Configuration
-	var status string = flag.Arg(0)
 
 	pogol.Config = config.Values()
 
@@ -40,7 +39,7 @@ func main() {
 	pogol.WorkingDirectory()
 	pogol.GitInformation()
 	pogol.MercurialInformation()
-	pogol.RootSymbol(status)
+	pogol.RootSymbol(flag.Arg(0))
 	pogol.PrintStatusLine()
 
 	os.Exit(0)
