@@ -83,6 +83,10 @@ func (pogol PowerGoLine) PrintStatusLine() {
 			current.Background = nextsegm.Background
 		}
 
+		// Escape subshell expressions to prevent arbitrary code execution.
+		current.Text = strings.Replace(current.Text, "$", "\\$", -1)
+		current.Text = strings.Replace(current.Text, "`", "\\`", -1)
+
 		pogol.Print(current.Text,
 			current.Foreground,
 			current.Background)
