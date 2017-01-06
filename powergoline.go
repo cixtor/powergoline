@@ -7,10 +7,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 const enabled string = "enabled"
-const tempPath string = "_tempfile_0f060643f7.txt"
 
 // PowerGoLine holds the configuration either defined by the current user in the
 // TTY session or the default settings defined by the program on startup. It
@@ -95,20 +96,14 @@ func (pogol PowerGoLine) PrintStatusLine() {
 	fmt.Printf("\u0020\n")
 }
 
+// IsWritable checks if the process can write in a directory.
+func (pogol PowerGoLine) IsWritable(folder string) bool {
+	return unix.Access(folder, unix.W_OK) == nil
+}
+
 // IsRdonlyDir checks if a directory is read only by the current user.
 func (pogol PowerGoLine) IsRdonlyDir(folder string) bool {
-	path := filepath.Join(folder, tempPath)
-	_, err := os.Create(path)
-
-	if err != nil {
-		return true
-	}
-
-	if err := os.Remove(path); err != nil {
-		return false
-	}
-
-	return false
+	return !pogol.IsWritable(folder)
 }
 
 // ExitColor determines the color for the result of each previous command.
