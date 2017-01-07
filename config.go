@@ -19,6 +19,7 @@ type PowerColor struct {
 	Symbol     StatusSymbol     `json:"symbol"`
 	Datetime   StandardConfig   `json:"datetime"`
 	Repository RepositoryConfig `json:"repository"`
+	Plugins    []Plugin         `json:"plugins"`
 }
 
 // StandardConfig is a generic text and color object.
@@ -55,6 +56,13 @@ type StatusCode struct {
 type StatusSymbol struct {
 	Regular   string `json:"regular"`
 	SuperUser string `json:"super_user"`
+}
+
+// Plugin adds support for execution of external commands.
+type Plugin struct {
+	Command    string `json:"command"`
+	Background string `json:"background"`
+	Foreground string `json:"foreground"`
 }
 
 // RepositoryExtraConfig adds additional settings.

@@ -24,6 +24,25 @@ export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
 
 The binary places a JSON file with the default configuration in the home directory of the user in the current session named `.powergoline.json`, change the values available in that file and leave the default values of the unchanged keys, if you want to reset the configuration just delete this file and the binary will re-create its content automatically.
 
+### Plugins
+
+The binary allows you to execute external commands to complement the information already provided by the built-in features. The output of these external programs is expected to be a single line to keep the format in shape. They will all appear before the status symbol and you can configure the background and foreground colors. You can execute as many plugins as you want. Bellow is an example of a configuration that will execute two external programs:
+
+```
+"plugins": [
+  {
+    "command": "timestamp",
+    "background": "255",
+    "foreground": "023"
+  },
+  {
+    "command": "shrug",
+    "background": "250",
+    "foreground": "020"
+  }
+],
+```
+
 ### Features
 
 * Color basic status code of executed commands.
@@ -37,9 +56,9 @@ The binary places a JSON file with the default configuration in the home directo
 * Switch to hide the hostname segment.
 * Branch and status info for Git repository.
 * Branch and status info for Mercurial repository.
+* Support plugins for extra information.
 
 ### TODO
 
 * Display current CVS branch _(subversion)_.
 * Display number of open processes _(all users, current user)_.
-* Support extensions for extra information.

@@ -39,6 +39,7 @@ func main() {
 	pogol.WorkingDirectory()
 	pogol.GitInformation()
 	pogol.MercurialInformation()
+	pogol.ExecuteAllPlugins()
 	pogol.RootSymbol(flag.Arg(0))
 	pogol.PrintStatusLine()
 

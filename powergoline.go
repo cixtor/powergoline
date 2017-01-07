@@ -349,6 +349,34 @@ func (pogol *PowerGoLine) MercurialInformation() {
 	}
 }
 
+// ExecuteAllPlugins runs all the user defined plugins.
+func (pogol *PowerGoLine) ExecuteAllPlugins() {
+	for _, metadata := range pogol.Config.Plugins {
+		pogol.ExecutePlugin(metadata)
+	}
+}
+
+// ExecutePlugin runs an user defined external command.
+func (pogol *PowerGoLine) ExecutePlugin(metadata Plugin) {
+	var extbin ExtBinary
+
+	output, err := extbin.Run(metadata.Command)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	content := "\x20" + string(output) + "\x20"
+
+	pogol.AddSegment(content,
+		metadata.Foreground,
+		metadata.Background)
+	pogol.AddSegment("\uE0B0",
+		metadata.Background,
+		"automatic")
+}
+
 // RootSymbol defines a segment with an indicator for root users.
 func (pogol *PowerGoLine) RootSymbol(status string) {
 	var symbol string

@@ -29,6 +29,19 @@ type RepositoryStatus struct {
 }
 
 // GitBranch returns the name of the current Git branch.
+func (extbin ExtBinary) Run(command string) ([]byte, error) {
+	response, err := exec.Command(command).CombinedOutput()
+
+	if err != nil {
+		return nil, err
+	}
+
+	response = bytes.Trim(response, "\n")
+
+	return response, nil
+}
+
+// GitBranch returns the name of the current Git branch.
 func (extbin ExtBinary) GitBranch() ([]byte, error) {
 	response, err := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").CombinedOutput()
 
