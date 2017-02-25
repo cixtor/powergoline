@@ -1,0 +1,57 @@
+{
+  "username": {
+    "status": "enabled",
+    "foreground": "255",
+    "background": "235"
+  },
+  "hostname": {
+    "status": "enabled",
+    "foreground": "255",
+    "background": "238"
+  },
+  "directory": {
+    "maximum_segments": "2",
+    "home_directory_fg": "255",
+    "home_directory_bg": "241",
+    "working_directory_fg": "255",
+    "working_directory_bg": "244",
+    "rdonly_directory_fg": "255",
+    "rdonly_directory_bg": "124"
+  },
+  "status": {
+    "symbol": "255",
+    "success": "247",
+    "failure": "001",
+    "misuse": "003",
+    "permission": "004",
+    "not_found": "014",
+    "invalid_exit": "202",
+    "terminated": "013"
+  },
+  "symbol": {
+    "regular": "$",
+    "super_user": "#"
+  },
+  "datetime": {
+    "status": "enabled",
+    "foreground": "255",
+    "background": "232"
+  },
+  "repository": {
+    "git": {
+      "status": "enabled",
+      "foreground": "255",
+      "background": "247",
+      "committed_bg": "214",
+      "untracked_bg": "175"
+    },
+    "mercurial": {
+      "status": "enabled",
+      "foreground": "255",
+      "background": "247",
+      "committed_bg": "",
+      "untracked_bg": ""
+    }
+  },
+  "plugins": null
+}
