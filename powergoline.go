@@ -392,5 +392,5 @@ func (pogol *PowerGoLine) RootSymbol(status string) {
 
 	symbol = fmt.Sprintf(" %s ", symbol)
 	pogol.AddSegment(symbol, pogol.Config.Status.Symbol, extcolor)
-	pogol.AddSegment("\uE0B0", extcolor, "")
+	pogol.AddSegment("\uE0B0", extcolor, "256")
 }
