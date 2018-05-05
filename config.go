@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -154,51 +154,47 @@ func (config Configuration) DefaultJSON() ([]byte, error) {
 }
 
 // Values returns the settings from the configuration file.
-func (config Configuration) Values() PowerColor {
-	path := config.Path()
+func (config Configuration) Values() (PowerColor, error) {
+	filename := config.Path()
 
 	// Try to read the file if it exists.
 	if config.Exists() {
-		file, err := os.Open(path)
-
-		if err != nil {
-			fmt.Println(err) /* log error */
-			return config.Default()
-		}
-
-		defer file.Close()
-
-		var data PowerColor
-
-		if err := json.NewDecoder(file).Decode(&data); err != nil {
-			fmt.Println(err) /* log error */
-			return config.Default()
-		}
-
-		return data
+		return config.ExistingValues(filename)
 	}
 
-	// Create and use the default configuration.
-	file, err := os.Create(path)
+	return config.NonExistingValues(filename)
+}
+
+// ExistingValues returns the configuration from a local file.
+func (config Configuration) ExistingValues(path string) (PowerColor, error) {
+	file, err := os.Open(path)
 
 	if err != nil {
-		fmt.Println(err) /* log error */
-		return config.Default()
+		return config.Default(), err
 	}
 
 	defer file.Close()
 
-	text, err := config.DefaultJSON()
+	var data PowerColor
+
+	if err := json.NewDecoder(file).Decode(&data); err != nil {
+		return config.Default(), err
+	}
+
+	return data, nil
+}
+
+// NonExistingValues creates the configuration file using default values.
+func (config Configuration) NonExistingValues(filename string) (PowerColor, error) {
+	data, err := config.DefaultJSON()
 
 	if err != nil {
-		fmt.Println(err) /* log error */
-		return config.Default()
+		return config.Default(), nil
 	}
 
-	if _, err := file.Write(text); err != nil {
-		fmt.Println(err) /* log error */
-		return config.Default()
+	if err := ioutil.WriteFile(filename, data, 0644); err != nil {
+		return config.Default(), nil
 	}
 
-	return config.Default()
+	return config.Default(), nil
 }
