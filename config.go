@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -160,8 +159,6 @@ func (config Configuration) Values() PowerColor {
 
 	// Try to read the file if it exists.
 	if config.Exists() {
-		var data PowerColor
-
 		file, err := os.Open(path)
 
 		if err != nil {
@@ -171,14 +168,9 @@ func (config Configuration) Values() PowerColor {
 
 		defer file.Close()
 
-		body, err := ioutil.ReadAll(file)
+		var data PowerColor
 
-		if err != nil {
-			fmt.Println(err) /* log error */
-			return config.Default()
-		}
-
-		if err := json.Unmarshal(body, &data); err != nil {
+		if err := json.NewDecoder(file).Decode(&data); err != nil {
 			fmt.Println(err) /* log error */
 			return config.Default()
 		}
