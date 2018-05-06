@@ -24,6 +24,9 @@ import (
 	"os"
 )
 
+// enabled defines a positive status.
+const enabled string = "enabled"
+
 // filename is the name of the configuration file.
 const filename = ".powergoline.json"
 

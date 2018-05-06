@@ -10,8 +10,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const enabled string = "enabled"
-
 // PowerGoLine holds the configuration either defined by the current user in the
 // TTY session or the default settings defined by the program on startup. It
 // also holds the bytes that will be printed in the command line prompt in the
@@ -57,23 +55,20 @@ func (pogol PowerGoLine) Print(text string, fg string, bg string) {
 
 	// Add the foreground and background colors.
 	if fg != "" && bg != "" {
-		colorSeq += fmt.Sprintf("38;5;%s", fg)
-		colorSeq += fmt.Sprintf(";")
-		colorSeq += fmt.Sprintf("48;5;%s", bg)
+		colorSeq += "38;5;" + fg + ";" + "48;5;" + bg
 	} else if fg != "" {
-		colorSeq += fmt.Sprintf("38;5;%s", fg)
+		colorSeq += "38;5;" + fg
 	} else if bg != "" {
-		colorSeq += fmt.Sprintf("48;5;%s", bg)
+		colorSeq += "48;5;" + bg
 	}
 
 	// Draw the color sequences if necessary.
 	if len(colorSeq) > 0 {
-		fmt.Printf("\\[\\e[%sm\\]", colorSeq)
-		fmt.Printf("%s", text)
-		fmt.Printf("\\[\\e[0m\\]")
-	} else {
-		fmt.Printf("%s", text)
+		fmt.Print("\\[\\e[" + colorSeq + "m\\]" + text + "\\[\\e[0m\\]")
+		return
 	}
+
+	fmt.Print(text)
 }
 
 // PrintStatusLine sends all the segments to the standard output.
