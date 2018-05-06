@@ -1,8 +1,5 @@
 package main
 
-// External configuration file path.
-const configPath string = ".powergoline.json"
-
 // Define default datetime values.
 const datetimeST string = "enabled"
 const datetimeFG string = "255"

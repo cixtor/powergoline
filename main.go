@@ -24,13 +24,13 @@ import (
 	"os"
 )
 
+// filename is the name of the configuration file.
+const filename = ".powergoline.json"
+
 func main() {
 	flag.Parse()
 
-	var pogol PowerGoLine
-	var config Configuration
-
-	pogol.Config = config.Values()
+	pogol := NewPowerGoLine(os.Getenv("HOME") + "/" + filename)
 
 	pogol.TermTitle()
 	pogol.DateTime()

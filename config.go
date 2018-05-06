@@ -3,11 +3,15 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 )
 
-// Configuration holds the CLI prompt settings.
-type Configuration struct{}
+// Config holds the CLI prompt settings.
+type Config struct {
+	filename string
+	values   PowerColor
+}
 
 // PowerColor is the base of the JSON object.
 type PowerColor struct {
@@ -77,20 +81,32 @@ type RepositoryConfig struct {
 	Mercurial RepositoryExtraConfig `json:"mercurial"`
 }
 
-// Path returns the full path of the configuration directory.
-func (config Configuration) Path() string {
-	return os.Getenv("HOME") + "/" + configPath
+// NewConfig creates a new instance of Config.
+func NewConfig(filename string) *Config {
+	var config Config
+
+	config.filename = filename
+
+	values, err := config.Values()
+
+	if err != nil {
+		log.Println("powergoline;", err)
+		/* do not return; continue */
+	}
+
+	config.values = values
+
+	return &config
 }
 
-// Exists checks if the configuration file exists.
-func (config Configuration) Exists() bool {
-	path := config.Path()
-	_, err := os.Stat(path)
+// exists checks if the configuration file exists.
+func (config Config) exists() bool {
+	_, err := os.Stat(config.filename)
 	return err == nil
 }
 
 // Default returns an object with the default configuration.
-func (config Configuration) Default() PowerColor {
+func (config Config) Default() PowerColor {
 	var pcolor PowerColor
 
 	pcolor.Username.Status = usernameST
@@ -140,33 +156,17 @@ func (config Configuration) Default() PowerColor {
 	return pcolor
 }
 
-// DefaultJSON returns a JSON-encoded string with the default configuration.
-func (config Configuration) DefaultJSON() ([]byte, error) {
-	pcolor := config.Default()
-
-	text, err := json.MarshalIndent(pcolor, "", "\x20\x20")
-
-	if err != nil {
-		return nil, err
-	}
-
-	return text, nil
-}
-
 // Values returns the settings from the configuration file.
-func (config Configuration) Values() (PowerColor, error) {
-	filename := config.Path()
-
-	// Try to read the file if it exists.
-	if config.Exists() {
-		return config.ExistingValues(filename)
+func (config Config) Values() (PowerColor, error) {
+	if config.exists() {
+		return config.ExistingValues(config.filename)
 	}
 
-	return config.NonExistingValues(filename)
+	return config.NonExistingValues(config.filename)
 }
 
 // ExistingValues returns the configuration from a local file.
-func (config Configuration) ExistingValues(path string) (PowerColor, error) {
+func (config Config) ExistingValues(path string) (PowerColor, error) {
 	file, err := os.Open(path)
 
 	if err != nil {
@@ -185,15 +185,15 @@ func (config Configuration) ExistingValues(path string) (PowerColor, error) {
 }
 
 // NonExistingValues creates the configuration file using default values.
-func (config Configuration) NonExistingValues(filename string) (PowerColor, error) {
-	data, err := config.DefaultJSON()
+func (config Config) NonExistingValues(filename string) (PowerColor, error) {
+	data, err := json.MarshalIndent(config.Default(), "", "\x20\x20")
 
 	if err != nil {
-		return config.Default(), nil
+		return config.Default(), err
 	}
 
 	if err := ioutil.WriteFile(filename, data, 0644); err != nil {
-		return config.Default(), nil
+		return config.Default(), err
 	}
 
 	return config.Default(), nil
