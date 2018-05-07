@@ -91,12 +91,13 @@ func (pogol PowerGoLine) PrintStatusLine() {
 		current.Text = strings.Replace(current.Text, "$", "\\$", -1)
 		current.Text = strings.Replace(current.Text, "`", "\\`", -1)
 
-		pogol.Print(current.Text,
+		pogol.Print(
+			current.Text,
 			current.Foreground,
 			current.Background)
 	}
 
-	fmt.Printf("\u0020\n")
+	fmt.Print("\u0020\n")
 }
 
 // IsWritable checks if the process can write in a directory.
@@ -118,7 +119,7 @@ func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
 	 *
 	 * 0     - Operation success and generic status code.
 	 * 1     - Catchall for general errors and failures.
-	 * 2     - Misuse of shell builtins, missing command, or permission problem.
+	 * 2     - Misuse of shell builtins, missing command or permission problem.
 	 * 126   - Command invoked cannot execute, permission problem,
 	 *         or the command is not an executable binary.
 	 * 127   - Command not found, illegal path, or possible typo.
@@ -155,11 +156,13 @@ func (pogol *PowerGoLine) TermTitle() {
 // DateTime defines a segment with the current date and time.
 func (pogol *PowerGoLine) DateTime() {
 	if pogol.config.values.Datetime.Status == enabled {
-		pogol.AddSegment("\x20"+time.Now().Format("15:04:05")+"\x20",
+		pogol.AddSegment(
+			"\x20"+time.Now().Format("15:04:05")+"\x20",
 			pogol.config.values.Datetime.Foreground,
 			pogol.config.values.Datetime.Background)
 
-		pogol.AddSegment("\uE0B0",
+		pogol.AddSegment(
+			"\uE0B0",
 			pogol.config.values.Datetime.Background,
 			pogol.config.values.Username.Background)
 	}
@@ -168,11 +171,13 @@ func (pogol *PowerGoLine) DateTime() {
 // Username defines a segment with the name of the current account.
 func (pogol *PowerGoLine) Username() {
 	if pogol.config.values.Username.Status == enabled {
-		pogol.AddSegment(" \\u ",
+		pogol.AddSegment(
+			"\x20\\u\x20",
 			pogol.config.values.Username.Foreground,
 			pogol.config.values.Username.Background)
 
-		pogol.AddSegment("\uE0B0",
+		pogol.AddSegment(
+			"\uE0B0",
 			pogol.config.values.Username.Background,
 			"automatic")
 	}
@@ -181,11 +186,13 @@ func (pogol *PowerGoLine) Username() {
 // Hostname defines a segment with the name of this system.
 func (pogol *PowerGoLine) Hostname() {
 	if pogol.config.values.Hostname.Status == enabled {
-		pogol.AddSegment(" \\h ",
+		pogol.AddSegment(
+			"\x20\\h\x20",
 			pogol.config.values.Hostname.Foreground,
 			pogol.config.values.Hostname.Background)
 
-		pogol.AddSegment("\uE0B0",
+		pogol.AddSegment(
+			"\uE0B0",
 			pogol.config.values.Hostname.Background,
 			"automatic")
 	}
@@ -193,11 +200,13 @@ func (pogol *PowerGoLine) Hostname() {
 
 // HomeDirectory defines a segment with current directory path.
 func (pogol *PowerGoLine) HomeDirectory() {
-	pogol.AddSegment(" ~ ",
+	pogol.AddSegment(
+		"\x20~\x20",
 		pogol.config.values.Directory.HomeDirectoryFg,
 		pogol.config.values.Directory.HomeDirectoryBg)
 
-	pogol.AddSegment("\uE0B0",
+	pogol.AddSegment(
+		"\uE0B0",
 		pogol.config.values.Directory.HomeDirectoryBg,
 		"automatic")
 }
@@ -238,31 +247,37 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 
 	// Draw each directory segment with right arrow.
 	for key, folder := range dirparts {
-		if folder != "" {
-			folder = fmt.Sprintf(" %s ", folder)
-			pogol.AddSegment(folder,
+		if folder == "" {
+			continue
+		}
+
+		pogol.AddSegment(
+			"\x20"+folder+"\x20",
+			pogol.config.values.Directory.WorkingDirectoryFg,
+			pogol.config.values.Directory.WorkingDirectoryBg)
+
+		if key == lastsegm {
+			pogol.AddSegment(
+				"\uE0B0",
+				pogol.config.values.Directory.WorkingDirectoryBg,
+				"automatic")
+		} else {
+			pogol.AddSegment(
+				"\uE0B1",
 				pogol.config.values.Directory.WorkingDirectoryFg,
 				pogol.config.values.Directory.WorkingDirectoryBg)
-
-			if key == lastsegm {
-				pogol.AddSegment("\uE0B0",
-					pogol.config.values.Directory.WorkingDirectoryBg,
-					"automatic")
-			} else {
-				pogol.AddSegment("\uE0B1",
-					pogol.config.values.Directory.WorkingDirectoryFg,
-					pogol.config.values.Directory.WorkingDirectoryBg)
-			}
 		}
 	}
 
 	// Draw lock if current directory is read-only.
 	if pogol.IsRdonlyDir(workingdir) {
-		pogol.AddSegment(" \uE0A2 ",
+		pogol.AddSegment(
+			"\x20\uE0A2\x20",
 			pogol.config.values.Directory.RdonlyDirectoryFg,
 			pogol.config.values.Directory.RdonlyDirectoryBg)
 
-		pogol.AddSegment("\uE0B0",
+		pogol.AddSegment(
+			"\uE0B0",
 			pogol.config.values.Directory.RdonlyDirectoryBg,
 			"automatic")
 	}
@@ -361,40 +376,32 @@ func (pogol *PowerGoLine) ExecuteAllPlugins() {
 }
 
 // ExecutePlugin runs an user defined external command.
-func (pogol *PowerGoLine) ExecutePlugin(metadata Plugin) {
+func (pogol *PowerGoLine) ExecutePlugin(p Plugin) {
 	var extbin ExtBinary
 
-	output, err := extbin.Run(metadata.Command)
+	output, err := extbin.Run(p.Command)
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		/* use error message instead */
+		output = []byte(err.Error())
 	}
 
-	content := "\x20" + string(output) + "\x20"
-
-	pogol.AddSegment(content,
-		metadata.Foreground,
-		metadata.Background)
-	pogol.AddSegment("\uE0B0",
-		metadata.Background,
-		"automatic")
+	pogol.AddSegment("\x20"+string(output)+"\x20", p.Foreground, p.Background)
+	pogol.AddSegment("\uE0B0", p.Background, "automatic")
 }
 
 // RootSymbol defines a segment with an indicator for root users.
 func (pogol *PowerGoLine) RootSymbol(status string) {
 	var symbol string
 
-	uid := os.Getuid()
 	extcolor := pogol.ExitColor(pogol.config.values, status)
 
-	if uid == 0 {
+	if os.Getuid() == 0 {
 		symbol = pogol.config.values.Symbol.SuperUser
 	} else {
 		symbol = pogol.config.values.Symbol.Regular
 	}
 
-	symbol = fmt.Sprintf(" %s ", symbol)
-	pogol.AddSegment(symbol, pogol.config.values.Status.Symbol, extcolor)
+	pogol.AddSegment("\x20"+symbol+"\x20", pogol.config.values.Status.Symbol, extcolor)
 	pogol.AddSegment("\uE0B0", extcolor, "256")
 }
