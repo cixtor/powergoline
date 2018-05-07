@@ -285,51 +285,54 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 
 // GitInformation defines a segment with information of a Git repository.
 func (pogol *PowerGoLine) GitInformation() {
-	if pogol.config.values.Repository.Git.Status == enabled {
-		var extbin ExtBinary
+	if pogol.config.values.Repository.Git.Status != enabled {
+		return
+	}
 
-		branch, _ := extbin.GitBranch()
+	var extbin ExtBinary
 
-		if branch != nil {
-			extra, err := extbin.GitStatusExtra()
-			branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
-			foreground := pogol.config.values.Repository.Git.Foreground
-			background := pogol.config.values.Repository.Git.Background
+	branch, err := extbin.GitBranch()
 
-			if err == nil {
-				if extra.Committed {
-					background = pogol.config.values.Repository.Git.CommittedBg
-				} else if extra.Untracked {
-					background = pogol.config.values.Repository.Git.UntrackedBg
-				}
+	if err != nil {
+		/* git is not installed */
+		/* not a git repository */
+		return
+	}
 
-				if extra.AheadCommits > 0 {
-					branchName += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
-				} else if extra.BehindCommits > 0 {
-					branchName += fmt.Sprintf("\u21E3%d ", extra.BehindCommits)
-				}
+	branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
+	foreground := pogol.config.values.Repository.Git.Foreground
+	background := pogol.config.values.Repository.Git.Background
 
-				status, err := extbin.GitStatus()
+	if extra, err := extbin.GitStatusExtra(); err == nil {
+		if extra.Committed {
+			background = pogol.config.values.Repository.Git.CommittedBg
+		} else if extra.Untracked {
+			background = pogol.config.values.Repository.Git.UntrackedBg
+		}
 
-				if err == nil {
-					if status["modified"] > 0 {
-						branchName += fmt.Sprintf("~%d ", status["modified"])
-					}
+		if extra.AheadCommits > 0 {
+			branchName += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
+		} else if extra.BehindCommits > 0 {
+			branchName += fmt.Sprintf("\u21E3%d ", extra.BehindCommits)
+		}
 
-					if status["added"] > 0 {
-						branchName += fmt.Sprintf("+%d ", status["added"])
-					}
-
-					if status["deleted"] > 0 {
-						branchName += fmt.Sprintf("-%d ", status["deleted"])
-					}
-				}
+		if status, err := extbin.GitStatus(); err == nil {
+			if status["modified"] > 0 {
+				branchName += fmt.Sprintf("~%d ", status["modified"])
 			}
 
-			pogol.AddSegment(branchName, foreground, background)
-			pogol.AddSegment("\uE0B0", background, "automatic")
+			if status["added"] > 0 {
+				branchName += fmt.Sprintf("+%d ", status["added"])
+			}
+
+			if status["deleted"] > 0 {
+				branchName += fmt.Sprintf("-%d ", status["deleted"])
+			}
 		}
 	}
+
+	pogol.AddSegment(branchName, foreground, background)
+	pogol.AddSegment("\uE0B0", background, "automatic")
 }
 
 // MercurialInformation defines a segment with information of a Mercurial repository.
