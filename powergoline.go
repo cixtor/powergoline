@@ -293,7 +293,7 @@ func (pogol *PowerGoLine) GitInformation() {
 
 	branch, err := extbin.GitBranch()
 
-	if err != nil {
+	if err != nil || branch == nil {
 		/* git is not installed */
 		/* not a git repository */
 		return
@@ -337,38 +337,46 @@ func (pogol *PowerGoLine) GitInformation() {
 
 // MercurialInformation defines a segment with information of a Mercurial repository.
 func (pogol *PowerGoLine) MercurialInformation() {
-	if pogol.config.values.Repository.Mercurial.Status == enabled {
-		var extbin ExtBinary
+	if pogol.config.values.Repository.Mercurial.Status != enabled {
+		return
+	}
 
-		branch, _ := extbin.MercurialBranch()
+	var extbin ExtBinary
 
-		if branch != nil {
-			status, err := extbin.MercurialStatus()
-			branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
+	branch, err := extbin.MercurialBranch()
 
-			if err == nil {
-				if status["modified"] > 0 {
-					branchName += fmt.Sprintf("~%d ", status["modified"])
-				}
+	if err != nil || branch == nil {
+		/* mercurial is not installed */
+		/* not a mercurial repository */
+		return
+	}
 
-				if status["added"] > 0 {
-					branchName += fmt.Sprintf("+%d ", status["added"])
-				}
+	status, err := extbin.MercurialStatus()
+	branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
 
-				if status["deleted"] > 0 {
-					branchName += fmt.Sprintf("-%d ", status["deleted"])
-				}
-			}
+	if err == nil {
+		if status["modified"] > 0 {
+			branchName += fmt.Sprintf("~%d ", status["modified"])
+		}
 
-			pogol.AddSegment(branchName,
-				pogol.config.values.Repository.Mercurial.Foreground,
-				pogol.config.values.Repository.Mercurial.Background)
+		if status["added"] > 0 {
+			branchName += fmt.Sprintf("+%d ", status["added"])
+		}
 
-			pogol.AddSegment("\uE0B0",
-				pogol.config.values.Repository.Mercurial.Background,
-				"automatic")
+		if status["deleted"] > 0 {
+			branchName += fmt.Sprintf("-%d ", status["deleted"])
 		}
 	}
+
+	pogol.AddSegment(
+		branchName,
+		pogol.config.values.Repository.Mercurial.Foreground,
+		pogol.config.values.Repository.Mercurial.Background)
+
+	pogol.AddSegment(
+		"\uE0B0",
+		pogol.config.values.Repository.Mercurial.Background,
+		"automatic")
 }
 
 // ExecuteAllPlugins runs all the user defined plugins.
