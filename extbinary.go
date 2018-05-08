@@ -28,35 +28,31 @@ type RepositoryStatus struct {
 	BehindCommits int
 }
 
-// GitBranch returns the name of the current Git branch.
+// Run executes an external command and returns the output.
 func (extbin ExtBinary) Run(command string) ([]byte, error) {
-	response, err := exec.Command(command).CombinedOutput()
+	response, err := exec.Command(command).CombinedOutput() // #nosec
 
 	if err != nil {
 		return nil, err
 	}
 
-	response = bytes.Trim(response, "\n")
-
-	return response, nil
+	return bytes.Trim(response, "\n"), nil
 }
 
 // GitBranch returns the name of the current Git branch.
 func (extbin ExtBinary) GitBranch() ([]byte, error) {
-	response, err := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").CombinedOutput()
+	response, err := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD").CombinedOutput() // #nosec
 
 	if err != nil {
 		return nil, err
 	}
 
-	response = bytes.Trim(response, "\n")
-
-	return response, nil
+	return bytes.Trim(response, "\n"), nil
 }
 
 // GitStatus returns information about the current state of a Git repository.
 func (extbin ExtBinary) GitStatus() (map[string]int, error) {
-	response, err := exec.Command("git", "status", "--porcelain", "--ignore-submodules").CombinedOutput()
+	response, err := exec.Command("git", "status", "--porcelain", "--ignore-submodules").CombinedOutput() // #nosec
 
 	if err != nil {
 		return nil, err
@@ -76,18 +72,20 @@ func (extbin ExtBinary) GitStatus() (map[string]int, error) {
 	var addedFiles int
 
 	for _, line := range lines {
-		if line != "" {
-			match := regex.FindStringSubmatch(line)
+		if line == "" {
+			continue
+		}
 
-			if len(match) > 0 {
-				switch match[1] {
-				case " M":
-					modifiedFiles++
-				case " D":
-					deletedFiles++
-				case "A ", "??":
-					addedFiles++
-				}
+		match := regex.FindStringSubmatch(line)
+
+		if len(match) > 0 {
+			switch match[1] {
+			case " M":
+				modifiedFiles++
+			case " D":
+				deletedFiles++
+			case "A ", "??":
+				addedFiles++
 			}
 		}
 	}
@@ -103,7 +101,7 @@ func (extbin ExtBinary) GitStatus() (map[string]int, error) {
 func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 	var stats RepositoryStatus
 
-	response, err := exec.Command("git", "status", "--ignore-submodules").CombinedOutput()
+	response, err := exec.Command("git", "status", "--ignore-submodules").CombinedOutput() // #nosec
 
 	if err != nil {
 		return stats, err
@@ -122,8 +120,7 @@ func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 	pattern := regexp.MustCompile(`(ahead|behind) of .+ by ([0-9]+) commits`)
 
 	if commits := pattern.FindStringSubmatch(output); commits != nil {
-		number, err := strconv.Atoi(commits[2])
-		if err == nil {
+		if number, err := strconv.Atoi(commits[2]); err == nil {
 			if commits[1] == "ahead" {
 				stats.AheadCommits = number
 			} else if commits[1] == "behind" {
@@ -137,20 +134,18 @@ func (extbin ExtBinary) GitStatusExtra() (RepositoryStatus, error) {
 
 // MercurialBranch returns the name of the current Mercurial branch.
 func (extbin ExtBinary) MercurialBranch() ([]byte, error) {
-	response, err := exec.Command("hg", "branch").CombinedOutput()
+	response, err := exec.Command("hg", "branch").CombinedOutput() // #nosec
 
 	if err != nil {
 		return nil, err
 	}
 
-	response = bytes.Trim(response, "\n")
-
-	return response, nil
+	return bytes.Trim(response, "\n"), nil
 }
 
 // MercurialStatus returns information about the current state of a Mercurial repository.
 func (extbin ExtBinary) MercurialStatus() (map[string]int, error) {
-	response, err := exec.Command("hg", "status").CombinedOutput()
+	response, err := exec.Command("hg", "status").CombinedOutput() // #nosec
 
 	if err != nil {
 		return nil, err
@@ -171,18 +166,20 @@ func (extbin ExtBinary) MercurialStatus() (map[string]int, error) {
 	var addedFiles int
 
 	for _, line := range lines {
-		if line != "" {
-			match := regex.FindStringSubmatch(line)
+		if line == "" {
+			continue
+		}
 
-			if len(match) > 0 {
-				switch match[1] {
-				case "M":
-					modifiedFiles++
-				case "R", "!":
-					deletedFiles++
-				case "A", "?":
-					addedFiles++
-				}
+		match := regex.FindStringSubmatch(line)
+
+		if len(match) > 0 {
+			switch match[1] {
+			case "M":
+				modifiedFiles++
+			case "R", "!":
+				deletedFiles++
+			case "A", "?":
+				addedFiles++
 			}
 		}
 	}
