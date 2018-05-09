@@ -2,23 +2,20 @@
 
 A lightweight status line for your terminal emulator. This project aims to be a lightweight alternative for the [powerline](https://github.com/powerline/powerline) project which is a status line plugin for vim that also provides support for several other applications, including zsh, bash, tmux, IPython, Awesome and Qtile.
 
-![PowerGoLine Screenshot](screenshot.png)
-
 ### Installation
 
-1. Clone this repository in your computer
-2. Install a patched monospace font [from here](https://github.com/powerline/fonts)
-3. Build the binary with `go build` _(not extra dependencies)_
-4. Place the binary in your home directory
-5. If you are not using _Bash_ [use this](https://github.com/milkbikis/powerline-shell) instead
-6. Add this function to your `.bashrc` configuration
+1. Install a patched monospace font [from here](https://github.com/powerline/fonts)
+1. `go get -u github.com/cixtor/powergoline`
+1. Add this function to your `.bashrc` configuration
 
-```
+```sh
 function set_prompt_command() {
-    export PS1="$($HOME/powergoline $? 2> /dev/null)"
+  export PS1="$($HOME/powergoline $? 2> /dev/null)"
 }
 export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
 ```
+
+![powergoline](screenshot.png)
 
 ### Configuration
 
@@ -40,7 +37,7 @@ The binary allows you to execute external commands to complement the information
     "background": "250",
     "foreground": "020"
   }
-],
+]
 ```
 
 ### Features
