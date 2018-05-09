@@ -173,7 +173,11 @@ func (config Config) ExistingValues(path string) (PowerColor, error) {
 		return config.Default(), err
 	}
 
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println("file.close;", err)
+		}
+	}()
 
 	var data PowerColor
 
