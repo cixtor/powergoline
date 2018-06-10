@@ -397,6 +397,11 @@ func (pogol *PowerGoLine) ExecutePlugin(p Plugin) {
 		output = []byte(err.Error())
 	}
 
+	if len(output) == 0 {
+		/* no output */
+		return
+	}
+
 	pogol.AddSegment("\x20"+string(output)+"\x20", p.Foreground, p.Background)
 	pogol.AddSegment("\uE0B0", p.Background, "automatic")
 }
