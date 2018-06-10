@@ -1,46 +1,35 @@
 package main
 
-// Define default datetime values.
-const datetimeST string = "enabled"
-const datetimeFG string = "255"
-const datetimeBG string = "232"
-
-// Define default username values.
-const usernameST string = "enabled"
-const usernameFG string = "255"
-const usernameBG string = "235"
-
-// Define default hostname values.
-const hostnameST string = "enabled"
-const hostnameFG string = "255"
-const hostnameBG string = "238"
-
-// Define default working directory values.
-const maximumSegments string = "2"
-const homeDirFG string = "255"
-const homeDirBG string = "241"
-const workingDirFG string = "255"
-const workingDirBG string = "244"
-const rdonlyDirFG string = "255"
-const rdonlyDirBG string = "124"
-
-// CVS default colors.
-const repositoryST string = "enabled"
-const repositoryFG string = "255"
-const repositoryBG string = "247"
-const repositoryCommittedBG string = "214"
-const repositoryUntrackedBG string = "175"
-
-// Status code default colors.
-const statusSymbol string = "255"
-const statusSuccess string = "247"
-const statusFailure string = "001"
-const statusMisuse string = "003"
-const statusPermission string = "004"
-const statusNotFound string = "014"
-const statusInvalidExit string = "202"
-const statusTerminated string = "013"
-
-// Define default status symbols.
-const symbolRegular string = "$"
-const symbolSuperUser string = "#"
+const (
+	datetimeStatus        string = "enabled"
+	datetimeForeground    string = "255"
+	datetimeBackground    string = "232"
+	usernameStatus        string = "enabled"
+	usernameForeground    string = "255"
+	usernameBackground    string = "235"
+	hostnameStatus        string = "enabled"
+	hostnameForeground    string = "255"
+	hostnameBackground    string = "238"
+	maximumSegments       string = "2"
+	homeDirForeground     string = "255"
+	homeDirBackground     string = "241"
+	workingDirForeground  string = "255"
+	workingDirBackground  string = "244"
+	readOnlyDirForeground string = "255"
+	readOnlyDirBackground string = "124"
+	repositoryStatus      string = "enabled"
+	repositoryForeground  string = "255"
+	repositoryBackground  string = "247"
+	repositoryCommittedBG string = "214"
+	repositoryUntrackedBG string = "175"
+	statusSymbol          string = "255"
+	statusSuccess         string = "247"
+	statusFailure         string = "001"
+	statusMisuse          string = "003"
+	statusPermission      string = "004"
+	statusNotFound        string = "014"
+	statusInvalidExit     string = "202"
+	statusTerminated      string = "013"
+	symbolRegular         string = "$"
+	symbolSuperUser       string = "#"
+)

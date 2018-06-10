@@ -109,21 +109,21 @@ func (config Config) exists() bool {
 func (config Config) Default() PowerColor {
 	var pcolor PowerColor
 
-	pcolor.Username.Status = usernameST
-	pcolor.Username.Foreground = usernameFG
-	pcolor.Username.Background = usernameBG
+	pcolor.Username.Status = usernameStatus
+	pcolor.Username.Foreground = usernameForeground
+	pcolor.Username.Background = usernameBackground
 
-	pcolor.Hostname.Status = hostnameST
-	pcolor.Hostname.Foreground = hostnameFG
-	pcolor.Hostname.Background = hostnameBG
+	pcolor.Hostname.Status = hostnameStatus
+	pcolor.Hostname.Foreground = hostnameForeground
+	pcolor.Hostname.Background = hostnameBackground
 
 	pcolor.Directory.MaximumSegments = maximumSegments
-	pcolor.Directory.HomeDirectoryFg = homeDirFG
-	pcolor.Directory.HomeDirectoryBg = homeDirBG
-	pcolor.Directory.WorkingDirectoryFg = workingDirFG
-	pcolor.Directory.WorkingDirectoryBg = workingDirBG
-	pcolor.Directory.RdonlyDirectoryFg = rdonlyDirFG
-	pcolor.Directory.RdonlyDirectoryBg = rdonlyDirBG
+	pcolor.Directory.HomeDirectoryFg = homeDirForeground
+	pcolor.Directory.HomeDirectoryBg = homeDirBackground
+	pcolor.Directory.WorkingDirectoryFg = workingDirForeground
+	pcolor.Directory.WorkingDirectoryBg = workingDirBackground
+	pcolor.Directory.RdonlyDirectoryFg = readOnlyDirForeground
+	pcolor.Directory.RdonlyDirectoryBg = readOnlyDirBackground
 
 	pcolor.Status.Symbol = statusSymbol
 	pcolor.Status.Success = statusSuccess
@@ -137,19 +137,19 @@ func (config Config) Default() PowerColor {
 	pcolor.Symbol.Regular = symbolRegular
 	pcolor.Symbol.SuperUser = symbolSuperUser
 
-	pcolor.Datetime.Status = datetimeST
-	pcolor.Datetime.Foreground = datetimeFG
-	pcolor.Datetime.Background = datetimeBG
+	pcolor.Datetime.Status = datetimeStatus
+	pcolor.Datetime.Foreground = datetimeForeground
+	pcolor.Datetime.Background = datetimeBackground
 
-	pcolor.Repository.Git.Status = repositoryST
-	pcolor.Repository.Git.Foreground = repositoryFG
-	pcolor.Repository.Git.Background = repositoryBG
+	pcolor.Repository.Git.Status = repositoryStatus
+	pcolor.Repository.Git.Foreground = repositoryForeground
+	pcolor.Repository.Git.Background = repositoryBackground
 	pcolor.Repository.Git.CommittedBg = repositoryCommittedBG
 	pcolor.Repository.Git.UntrackedBg = repositoryUntrackedBG
 
-	pcolor.Repository.Mercurial.Status = repositoryST
-	pcolor.Repository.Mercurial.Foreground = repositoryFG
-	pcolor.Repository.Mercurial.Background = repositoryBG
+	pcolor.Repository.Mercurial.Status = repositoryStatus
+	pcolor.Repository.Mercurial.Foreground = repositoryForeground
+	pcolor.Repository.Mercurial.Background = repositoryBackground
 	pcolor.Repository.Git.CommittedBg = repositoryCommittedBG
 	pcolor.Repository.Git.UntrackedBg = repositoryUntrackedBG
 
