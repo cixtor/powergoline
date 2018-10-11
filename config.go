@@ -109,6 +109,10 @@ func (config Config) exists() bool {
 func (config Config) Default() PowerColor {
 	var pcolor PowerColor
 
+	pcolor.Datetime.Status = datetimeStatus
+	pcolor.Datetime.Foreground = datetimeForeground
+	pcolor.Datetime.Background = datetimeBackground
+
 	pcolor.Username.Status = usernameStatus
 	pcolor.Username.Foreground = usernameForeground
 	pcolor.Username.Background = usernameBackground
@@ -125,22 +129,6 @@ func (config Config) Default() PowerColor {
 	pcolor.Directory.RdonlyDirectoryFg = readOnlyDirForeground
 	pcolor.Directory.RdonlyDirectoryBg = readOnlyDirBackground
 
-	pcolor.Status.Symbol = statusSymbol
-	pcolor.Status.Success = statusSuccess
-	pcolor.Status.Failure = statusFailure
-	pcolor.Status.Misuse = statusMisuse
-	pcolor.Status.Permission = statusPermission
-	pcolor.Status.NotFound = statusNotFound
-	pcolor.Status.InvalidExit = statusInvalidExit
-	pcolor.Status.Terminated = statusTerminated
-
-	pcolor.Symbol.Regular = symbolRegular
-	pcolor.Symbol.SuperUser = symbolSuperUser
-
-	pcolor.Datetime.Status = datetimeStatus
-	pcolor.Datetime.Foreground = datetimeForeground
-	pcolor.Datetime.Background = datetimeBackground
-
 	pcolor.Repository.Git.Status = repositoryStatus
 	pcolor.Repository.Git.Foreground = repositoryForeground
 	pcolor.Repository.Git.Background = repositoryBackground
@@ -152,6 +140,18 @@ func (config Config) Default() PowerColor {
 	pcolor.Repository.Mercurial.Background = repositoryBackground
 	pcolor.Repository.Git.CommittedBg = repositoryCommittedBG
 	pcolor.Repository.Git.UntrackedBg = repositoryUntrackedBG
+
+	pcolor.Symbol.Regular = symbolRegular
+	pcolor.Symbol.SuperUser = symbolSuperUser
+
+	pcolor.Status.Symbol = statusSymbol
+	pcolor.Status.Success = statusSuccess
+	pcolor.Status.Failure = statusFailure
+	pcolor.Status.Misuse = statusMisuse
+	pcolor.Status.Permission = statusPermission
+	pcolor.Status.NotFound = statusNotFound
+	pcolor.Status.InvalidExit = statusInvalidExit
+	pcolor.Status.Terminated = statusTerminated
 
 	return pcolor
 }
