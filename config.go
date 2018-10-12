@@ -99,12 +99,6 @@ func NewConfig(filename string) *Config {
 	return &config
 }
 
-// exists checks if the configuration file exists.
-func (config Config) exists() bool {
-	_, err := os.Stat(config.filename)
-	return err == nil
-}
-
 // Default returns an object with the default configuration.
 func (config Config) Default() PowerColor {
 	var pcolor PowerColor
@@ -158,11 +152,11 @@ func (config Config) Default() PowerColor {
 
 // Values returns the settings from the configuration file.
 func (config Config) Values() (PowerColor, error) {
-	if config.exists() {
-		return config.ExistingValues(config.filename)
+	if _, err := os.Stat(config.filename); os.IsNotExist(err) {
+		return config.NonExistingValues(config.filename)
 	}
 
-	return config.NonExistingValues(config.filename)
+	return config.ExistingValues(config.filename)
 }
 
 // ExistingValues returns the configuration from a local file.
