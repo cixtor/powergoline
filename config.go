@@ -15,14 +15,14 @@ type Config struct {
 
 // PowerColor is the base of the JSON object.
 type PowerColor struct {
+	Datetime   StandardConfig   `json:"datetime"`
 	Username   StandardConfig   `json:"username"`
 	Hostname   StandardConfig   `json:"hostname"`
 	Directory  DirectoryConfig  `json:"directory"`
-	Status     StatusCode       `json:"status"`
-	Symbol     StatusSymbol     `json:"symbol"`
-	Datetime   StandardConfig   `json:"datetime"`
 	Repository RepositoryConfig `json:"repository"`
 	Plugins    []Plugin         `json:"plugins"`
+	Symbol     StatusSymbol     `json:"symbol"`
+	Status     StatusCode       `json:"status"`
 }
 
 // StandardConfig is a generic text and color object.
@@ -184,7 +184,7 @@ func (config Config) ExistingValues(path string) (PowerColor, error) {
 
 // NonExistingValues creates the configuration file using default values.
 func (config Config) NonExistingValues(filename string) (PowerColor, error) {
-	data, err := json.MarshalIndent(config.Default(), "", "\x20\x20")
+	data, err := json.MarshalIndent(config.Default(), "", "\t")
 
 	if err != nil {
 		return config.Default(), err
