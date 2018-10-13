@@ -11,15 +11,15 @@ import (
 
 // ExtBinary encapsulates the methods that spawn the execution of external
 // binaries like the control version repository tools among others that
-// facilitate the popullation of the command line prompt. Additional methods can
-// be attached following the same template as the original interface.
+// facilitate the popullation of the command line prompt. Additional methods
+// can be attached following the same template as the original interface.
 type ExtBinary struct{}
 
 // RepositoryStatus holds the information of the current state of a repository,
 // this includes the number of untracked files, number of commits ahead from
 // remote, number of commits behind compared to the state of the remote
-// repository, and nothing in case the state of the local repository is the same
-// as the remote version.
+// repository, and nothing in case the state of the local repository is the
+// same as the remote version.
 type RepositoryStatus struct {
 	Nothing       bool
 	Committed     bool

@@ -10,10 +10,10 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// PowerGoLine holds the configuration either defined by the current user in the
-// TTY session or the default settings defined by the program on startup. It
-// also holds the bytes that will be printed in the command line prompt in the
-// form of segments.
+// PowerGoLine holds the configuration either defined by the current user in
+// the TTY session or the default settings defined by the program on startup.
+// It also holds the bytes that will be printed in the command line prompt in
+// the form of segments.
 type PowerGoLine struct {
 	Segments []Segment
 	config   *Config
@@ -24,9 +24,9 @@ type PowerGoLine struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	Text       string
-	Foreground string
-	Background string
+	Text string
+	Fore string
+	Back string
 }
 
 // NewPowerGoLine loads the config file and instantiates PowerGoLine.
@@ -40,31 +40,29 @@ func NewPowerGoLine(filename string) *PowerGoLine {
 
 // AddSegment inserts a new block in the CLI prompt output.
 func (pogol *PowerGoLine) AddSegment(text string, fg string, bg string) {
-	var segment Segment
-
-	segment.Text = text
-	segment.Foreground = fg
-	segment.Background = bg
-
-	pogol.Segments = append(pogol.Segments, segment)
+	pogol.Segments = append(pogol.Segments, Segment{
+		Text: text,
+		Fore: fg,
+		Back: bg,
+	})
 }
 
 // Print sends a segment to the standard output.
 func (pogol PowerGoLine) Print(text string, fg string, bg string) {
-	var colorSeq string
+	var color string
 
 	// Add the foreground and background colors.
 	if fg != "" && bg != "" {
-		colorSeq += "38;5;" + fg + ";" + "48;5;" + bg
+		color += "38;5;" + fg + ";" + "48;5;" + bg
 	} else if fg != "" {
-		colorSeq += "38;5;" + fg
+		color += "38;5;" + fg
 	} else if bg != "" {
-		colorSeq += "48;5;" + bg
+		color += "48;5;" + bg
 	}
 
 	// Draw the color sequences if necessary.
-	if len(colorSeq) > 0 {
-		fmt.Print("\\[\\e[" + colorSeq + "m\\]" + text + "\\[\\e[0m\\]")
+	if len(color) > 0 {
+		fmt.Print("\\[\\e[" + color + "m\\]" + text + "\\[\\e[0m\\]")
 		return
 	}
 
@@ -73,28 +71,24 @@ func (pogol PowerGoLine) Print(text string, fg string, bg string) {
 
 // PrintStatusLine sends all the segments to the standard output.
 func (pogol PowerGoLine) PrintStatusLine() {
-	var key int
-	var current Segment
-	var nextsegm Segment
+	var curr Segment
+	var next Segment
 
 	ttlsegms := len(pogol.Segments)
 
-	for key = 0; key < ttlsegms; key++ {
-		current = pogol.Segments[key]
+	for key := 0; key < ttlsegms; key++ {
+		curr = pogol.Segments[key]
 
-		if current.Background == "automatic" {
-			nextsegm = pogol.Segments[key+1]
-			current.Background = nextsegm.Background
+		if curr.Back == "automatic" {
+			next = pogol.Segments[key+1]
+			curr.Back = next.Back
 		}
 
-		// Escape subshell expressions to prevent arbitrary code execution.
-		current.Text = strings.Replace(current.Text, "$", "\\$", -1)
-		current.Text = strings.Replace(current.Text, "`", "\\`", -1)
+		// prevent arbitrary code execution in subshell expressions.
+		curr.Text = strings.Replace(curr.Text, "$", "\\$", -1)
+		curr.Text = strings.Replace(curr.Text, "`", "\\`", -1)
 
-		pogol.Print(
-			current.Text,
-			current.Foreground,
-			current.Background)
+		pogol.Print(curr.Text, curr.Fore, curr.Back)
 	}
 
 	fmt.Print("\u0020\n")
@@ -111,41 +105,39 @@ func (pogol PowerGoLine) IsRdonlyDir(folder string) bool {
 }
 
 // ExitColor determines the color for the result of each previous command.
+//
+// System Status Codes:
+//
+//   0     - Operation success and generic status code.
+//   1     - Catchall for general errors and failures.
+//   2     - Misuse of shell builtins, missing command or permission problem.
+//   126   - Cannot execute command, permission problem, or not an executable.
+//   127   - Command not found, illegal path, or possible typo.
+//   128   - Invalid argument to exit, only use range 0-255.
+//   128+n - Fatal error signal where "n" is the PID.
+//   130   - Script terminated by Control-C.
+//   255*  - Exit status out of range.
 func (pogol PowerGoLine) ExitColor(pcolor PowerColor, status string) string {
-	var extcolor string
+	var color string
 
-	/**
-	 * System Status Codes.
-	 *
-	 * 0     - Operation success and generic status code.
-	 * 1     - Catchall for general errors and failures.
-	 * 2     - Misuse of shell builtins, missing command or permission problem.
-	 * 126   - Command invoked cannot execute, permission problem,
-	 *         or the command is not an executable binary.
-	 * 127   - Command not found, illegal path, or possible typo.
-	 * 128   - Invalid argument to exit, only use range 0-255.
-	 * 128+n - Fatal error signal where "n" is the PID.
-	 * 130   - Script terminated by Control-C.
-	 * 255*  - Exit status out of range.
-	 */
-
-	if status == "0" {
-		extcolor = pogol.config.values.Status.Success
-	} else if status == "1" {
-		extcolor = pogol.config.values.Status.Failure
-	} else if status == "126" {
-		extcolor = pogol.config.values.Status.Permission
-	} else if status == "127" {
-		extcolor = pogol.config.values.Status.NotFound
-	} else if status == "128" {
-		extcolor = pogol.config.values.Status.InvalidExit
-	} else if status == "130" {
-		extcolor = pogol.config.values.Status.Terminated
-	} else {
-		extcolor = pogol.config.values.Status.Misuse
+	switch status {
+	case "0":
+		color = pogol.config.values.Status.Success
+	case "1":
+		color = pogol.config.values.Status.Failure
+	case "126":
+		color = pogol.config.values.Status.Permission
+	case "127":
+		color = pogol.config.values.Status.NotFound
+	case "128":
+		color = pogol.config.values.Status.InvalidExit
+	case "130":
+		color = pogol.config.values.Status.Terminated
+	default:
+		color = pogol.config.values.Status.Misuse
 	}
 
-	return extcolor
+	return color
 }
 
 // TermTitle defines the template for the terminal title.
@@ -159,12 +151,14 @@ func (pogol *PowerGoLine) DateTime() {
 		pogol.AddSegment(
 			"\x20"+time.Now().Format("15:04:05")+"\x20",
 			pogol.config.values.Datetime.Foreground,
-			pogol.config.values.Datetime.Background)
+			pogol.config.values.Datetime.Background,
+		)
 
 		pogol.AddSegment(
 			"\uE0B0",
 			pogol.config.values.Datetime.Background,
-			pogol.config.values.Username.Background)
+			pogol.config.values.Username.Background,
+		)
 	}
 }
 
@@ -174,12 +168,14 @@ func (pogol *PowerGoLine) Username() {
 		pogol.AddSegment(
 			"\x20\\u\x20",
 			pogol.config.values.Username.Foreground,
-			pogol.config.values.Username.Background)
+			pogol.config.values.Username.Background,
+		)
 
 		pogol.AddSegment(
 			"\uE0B0",
 			pogol.config.values.Username.Background,
-			"automatic")
+			"automatic",
+		)
 	}
 }
 
@@ -189,12 +185,14 @@ func (pogol *PowerGoLine) Hostname() {
 		pogol.AddSegment(
 			"\x20\\h\x20",
 			pogol.config.values.Hostname.Foreground,
-			pogol.config.values.Hostname.Background)
+			pogol.config.values.Hostname.Background,
+		)
 
 		pogol.AddSegment(
 			"\uE0B0",
 			pogol.config.values.Hostname.Background,
-			"automatic")
+			"automatic",
+		)
 	}
 }
 
@@ -203,12 +201,14 @@ func (pogol *PowerGoLine) HomeDirectory() {
 	pogol.AddSegment(
 		"\x20~\x20",
 		pogol.config.values.Directory.HomeDirectoryFg,
-		pogol.config.values.Directory.HomeDirectoryBg)
+		pogol.config.values.Directory.HomeDirectoryBg,
+	)
 
 	pogol.AddSegment(
 		"\uE0B0",
 		pogol.config.values.Directory.HomeDirectoryBg,
-		"automatic")
+		"automatic",
+	)
 }
 
 // WorkingDirectory returns the full path of the current directory.
@@ -254,18 +254,21 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 		pogol.AddSegment(
 			"\x20"+folder+"\x20",
 			pogol.config.values.Directory.WorkingDirectoryFg,
-			pogol.config.values.Directory.WorkingDirectoryBg)
+			pogol.config.values.Directory.WorkingDirectoryBg,
+		)
 
 		if key == lastsegm {
 			pogol.AddSegment(
 				"\uE0B0",
 				pogol.config.values.Directory.WorkingDirectoryBg,
-				"automatic")
+				"automatic",
+			)
 		} else {
 			pogol.AddSegment(
 				"\uE0B1",
 				pogol.config.values.Directory.WorkingDirectoryFg,
-				pogol.config.values.Directory.WorkingDirectoryBg)
+				pogol.config.values.Directory.WorkingDirectoryBg,
+			)
 		}
 	}
 
@@ -274,12 +277,14 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 		pogol.AddSegment(
 			"\x20\uE0A2\x20",
 			pogol.config.values.Directory.RdonlyDirectoryFg,
-			pogol.config.values.Directory.RdonlyDirectoryBg)
+			pogol.config.values.Directory.RdonlyDirectoryBg,
+		)
 
 		pogol.AddSegment(
 			"\uE0B0",
 			pogol.config.values.Directory.RdonlyDirectoryBg,
-			"automatic")
+			"automatic",
+		)
 	}
 }
 
@@ -371,12 +376,14 @@ func (pogol *PowerGoLine) MercurialInformation() {
 	pogol.AddSegment(
 		branchName,
 		pogol.config.values.Repository.Mercurial.Foreground,
-		pogol.config.values.Repository.Mercurial.Background)
+		pogol.config.values.Repository.Mercurial.Background,
+	)
 
 	pogol.AddSegment(
 		"\uE0B0",
 		pogol.config.values.Repository.Mercurial.Background,
-		"automatic")
+		"automatic",
+	)
 }
 
 // ExecuteAllPlugins runs all the user defined plugins.
