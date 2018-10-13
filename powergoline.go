@@ -1,14 +1,21 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
 )
+
+// errEmptyOutput defines an error when executing a command with no output.
+var errEmptyOutput = errors.New("empty output")
 
 // PowerGoLine holds the configuration either defined by the current user in
 // the TTY session or the default settings defined by the program on startup.
@@ -27,6 +34,20 @@ type Segment struct {
 	Text string
 	Fore string
 	Back string
+}
+
+// RepoStatus holds the information of the current state of a repository, this
+// includes the number of untracked files, number of commits ahead from remote,
+// number of commits behind compared to the state of the remote repository,
+// and nothing in case the state of the local repository is the same as the
+// remote version.
+type RepoStatus struct {
+	Branch   []byte
+	Ahead    int
+	Behind   int
+	Added    int
+	Deleted  int
+	Modified int
 }
 
 // NewPowerGoLine loads the config file and instantiates PowerGoLine.
@@ -290,98 +311,107 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 
 // GitInformation defines a segment with information of a Git repository.
 func (pogol *PowerGoLine) GitInformation() {
-	if pogol.config.values.Repository.Git.Status != enabled {
+	if pogol.config.values.Repository.Status != enabled {
 		return
 	}
 
-	var extbin ExtBinary
+	// check if a repository exists in the current folder.
+	if _, err := os.Stat(".git"); os.IsNotExist(err) {
+		return
+	}
 
-	branch, err := extbin.GitBranch()
+	status, err := repoStatusGit()
 
-	if err != nil || branch == nil {
+	if err != nil {
 		/* git is not installed */
 		/* not a git repository */
 		return
 	}
 
-	branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
-	foreground := pogol.config.values.Repository.Git.Foreground
-	background := pogol.config.values.Repository.Git.Background
+	branch := fmt.Sprintf(" \uE0A0 %s ", status.Branch)
 
-	if extra, err := extbin.GitStatusExtra(); err == nil {
-		if extra.Committed {
-			background = pogol.config.values.Repository.Git.CommittedBg
-		} else if extra.Untracked {
-			background = pogol.config.values.Repository.Git.UntrackedBg
-		}
-
-		if extra.AheadCommits > 0 {
-			branchName += fmt.Sprintf("\u21E1%d ", extra.AheadCommits)
-		} else if extra.BehindCommits > 0 {
-			branchName += fmt.Sprintf("\u21E3%d ", extra.BehindCommits)
-		}
-
-		if status, err := extbin.GitStatus(); err == nil {
-			if status["modified"] > 0 {
-				branchName += fmt.Sprintf("~%d ", status["modified"])
-			}
-
-			if status["added"] > 0 {
-				branchName += fmt.Sprintf("+%d ", status["added"])
-			}
-
-			if status["deleted"] > 0 {
-				branchName += fmt.Sprintf("-%d ", status["deleted"])
-			}
-		}
+	if status.Ahead > 0 {
+		branch += fmt.Sprintf("\u21E1%d ", status.Ahead)
 	}
 
-	pogol.AddSegment(branchName, foreground, background)
-	pogol.AddSegment("\uE0B0", background, "automatic")
+	if status.Behind > 0 {
+		branch += fmt.Sprintf("\u21E3%d ", status.Behind)
+	}
+
+	if status.Added > 0 {
+		branch += fmt.Sprintf("+%d ", status.Added)
+	}
+
+	if status.Modified > 0 {
+		branch += fmt.Sprintf("~%d ", status.Modified)
+	}
+
+	if status.Deleted > 0 {
+		branch += fmt.Sprintf("-%d ", status.Deleted)
+	}
+
+	pogol.AddSegment(
+		branch,
+		pogol.config.values.Repository.Foreground,
+		pogol.config.values.Repository.Background,
+	)
+	pogol.AddSegment(
+		"\uE0B0",
+		pogol.config.values.Repository.Background,
+		"automatic",
+	)
 }
 
 // MercurialInformation defines a segment with information of a Mercurial repository.
 func (pogol *PowerGoLine) MercurialInformation() {
-	if pogol.config.values.Repository.Mercurial.Status != enabled {
+	if pogol.config.values.Repository.Status != enabled {
 		return
 	}
 
-	var extbin ExtBinary
+	// check if a repository exists in the current folder.
+	if _, err := os.Stat(".hg"); os.IsNotExist(err) {
+		return
+	}
 
-	branch, err := extbin.MercurialBranch()
+	status, err := repoStatusMercurial()
 
-	if err != nil || branch == nil {
+	if err != nil {
 		/* mercurial is not installed */
 		/* not a mercurial repository */
 		return
 	}
 
-	status, err := extbin.MercurialStatus()
-	branchName := fmt.Sprintf(" \uE0A0 %s ", branch)
+	branch := fmt.Sprintf(" \uE0A0 %s ", status.Branch)
 
-	if err == nil {
-		if status["modified"] > 0 {
-			branchName += fmt.Sprintf("~%d ", status["modified"])
-		}
+	if status.Ahead > 0 {
+		branch += fmt.Sprintf("\u21E1%d ", status.Ahead)
+	}
 
-		if status["added"] > 0 {
-			branchName += fmt.Sprintf("+%d ", status["added"])
-		}
+	if status.Behind > 0 {
+		branch += fmt.Sprintf("\u21E3%d ", status.Behind)
+	}
 
-		if status["deleted"] > 0 {
-			branchName += fmt.Sprintf("-%d ", status["deleted"])
-		}
+	if status.Added > 0 {
+		branch += fmt.Sprintf("+%d ", status.Added)
+	}
+
+	if status.Modified > 0 {
+		branch += fmt.Sprintf("~%d ", status.Modified)
+	}
+
+	if status.Deleted > 0 {
+		branch += fmt.Sprintf("-%d ", status.Deleted)
 	}
 
 	pogol.AddSegment(
-		branchName,
-		pogol.config.values.Repository.Mercurial.Foreground,
-		pogol.config.values.Repository.Mercurial.Background,
+		branch,
+		pogol.config.values.Repository.Foreground,
+		pogol.config.values.Repository.Background,
 	)
 
 	pogol.AddSegment(
 		"\uE0B0",
-		pogol.config.values.Repository.Mercurial.Background,
+		pogol.config.values.Repository.Background,
 		"automatic",
 	)
 }
@@ -395,18 +425,16 @@ func (pogol *PowerGoLine) ExecuteAllPlugins() {
 
 // ExecutePlugin runs an user defined external command.
 func (pogol *PowerGoLine) ExecutePlugin(p Plugin) {
-	var extbin ExtBinary
+	output, err := call(p.Command)
 
-	output, err := extbin.Run(p.Command)
+	if err == errEmptyOutput {
+		/* no output */
+		return
+	}
 
 	if err != nil {
 		/* use error message instead */
 		output = []byte(err.Error())
-	}
-
-	if len(output) == 0 {
-		/* no output */
-		return
 	}
 
 	pogol.AddSegment("\x20"+string(output)+"\x20", p.Foreground, p.Background)
@@ -427,4 +455,164 @@ func (pogol *PowerGoLine) RootSymbol(status string) {
 
 	pogol.AddSegment("\x20"+symbol+"\x20", pogol.config.values.Status.Symbol, extcolor)
 	pogol.AddSegment("\uE0B0", extcolor, "")
+}
+
+// runcmd executes an external command and returns the output.
+func call(name string, arg ...string) ([]byte, error) {
+	out, err := exec.Command(name, arg...).CombinedOutput() // #nosec
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(out) == 0 {
+		return nil, errEmptyOutput
+	}
+
+	return bytes.Trim(out, "\n"), nil
+}
+
+// repoStatusGit returns information about the current state of a Git repository.
+func repoStatusGit() (RepoStatus, error) {
+	out, err := call("git", "status", "--branch", "--porcelain", "--ignore-submodules")
+
+	if err != nil {
+		return RepoStatus{}, err
+	}
+
+	return repoStatusGitParse(bytes.Split(out, []byte("\n")))
+}
+
+// repoStatusGitParse parses the output of the `git status` command.
+//
+//   ## master...origin/master [ahead 5, behind 8]
+//   D  deleted.txt
+//    D missing.txt
+//   M  patches.go
+//    M changes.go
+//   A  newfile.sh
+//   ?? isadded.json
+func repoStatusGitParse(lines [][]byte) (RepoStatus, error) {
+	var status RepoStatus
+
+	for _, line := range lines {
+		if len(line) < 4 {
+			continue
+		}
+
+		if bytes.Equal(line[0:2], []byte{'#', '#'}) {
+			repoStatusGitBranch(&status, line)
+			continue
+		}
+
+		if line[0] == 'D' || line[1] == 'D' {
+			status.Deleted++
+			continue
+		}
+
+		if line[0] == 'M' || line[1] == 'M' {
+			status.Modified++
+			continue
+		}
+
+		if line[0] == 'A' || line[1] == '?' {
+			status.Added++
+			continue
+		}
+	}
+
+	return status, nil
+}
+
+// repoStatusGitBranch parses the header of the `git status` command.
+//
+//   ## master...origin/master
+//   ## master...origin/master [ahead 5]
+//   ## master...origin/master [behind 8]
+//   ## master...origin/master [ahead 5, behind 8]
+func repoStatusGitBranch(status *RepoStatus, line []byte) {
+	var bols [][]byte
+	var clean []byte
+
+	if bytes.Contains(line, []byte("...")) {
+		status.Branch = line[3:bytes.Index(line, []byte("..."))]
+	}
+
+	if bytes.Contains(line, []byte{'['}) && bytes.Contains(line, []byte{']'}) {
+		line = line[bytes.Index(line, []byte("["))+1 : len(line)-1]
+		line = bytes.Replace(line, []byte("\x20"), []byte{}, -1)
+		bols = bytes.Split(line, []byte{','})
+
+		for _, part := range bols {
+			if len(part) < 6 {
+				continue
+			}
+
+			if bytes.Equal(part[0:5], []byte("ahead")) {
+				clean = bytes.Replace(part, []byte("ahead"), []byte{}, 1)
+				if number, err := strconv.Atoi(string(clean)); err == nil {
+					status.Ahead = number
+				}
+			}
+
+			if bytes.Equal(part[0:5], []byte("behin")) {
+				clean = bytes.Replace(part, []byte("behind"), []byte{}, 1)
+				if number, err := strconv.Atoi(string(clean)); err == nil {
+					status.Behind = number
+				}
+			}
+		}
+	}
+}
+
+// repoStatusMercurial returns information about the current state of a Mercurial repository.
+func repoStatusMercurial() (RepoStatus, error) {
+	out, err := call("hg", "status")
+
+	if err != nil {
+		return RepoStatus{}, err
+	}
+
+	return repoStatusMercurialParse(bytes.Split(out, []byte("\n")))
+}
+
+// repoStatusMercurialParse parses the output of the `hg status` command.
+//
+//   A newfile.sh
+//   ? isadded.json
+//   M patches.go
+//   M changes.go
+//   R deleted.txt
+//   ! missing.txt
+func repoStatusMercurialParse(lines [][]byte) (RepoStatus, error) {
+	var status RepoStatus
+
+	if branch, err := ioutil.ReadFile(".hg/branch"); err == nil {
+		status.Branch = bytes.TrimSpace(branch)
+	} else {
+		status.Branch = []byte("default")
+	}
+
+	for _, line := range lines {
+		if len(line) < 3 {
+			continue
+		}
+
+		if line[0] == 'A' || line[0] == '?' {
+			status.Added++
+			continue
+		}
+
+		if line[0] == 'M' || line[0] == 'm' {
+			status.Modified++
+			continue
+		}
+
+		if line[0] == 'R' || line[0] == '!' {
+			status.Deleted++
+			continue
+		}
+	}
+
+	return status, nil
 }

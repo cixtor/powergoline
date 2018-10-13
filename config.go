@@ -15,14 +15,14 @@ type Config struct {
 
 // PowerColor is the base of the JSON object.
 type PowerColor struct {
-	Datetime   StandardConfig   `json:"datetime"`
-	Username   StandardConfig   `json:"username"`
-	Hostname   StandardConfig   `json:"hostname"`
-	Directory  DirectoryConfig  `json:"directory"`
-	Repository RepositoryConfig `json:"repository"`
-	Plugins    []Plugin         `json:"plugins"`
-	Symbol     StatusSymbol     `json:"symbol"`
-	Status     StatusCode       `json:"status"`
+	Datetime   StandardConfig  `json:"datetime"`
+	Username   StandardConfig  `json:"username"`
+	Hostname   StandardConfig  `json:"hostname"`
+	Directory  DirectoryConfig `json:"directory"`
+	Repository StandardConfig  `json:"repository"`
+	Plugins    []Plugin        `json:"plugins"`
+	Symbol     StatusSymbol    `json:"symbol"`
+	Status     StatusCode      `json:"status"`
 }
 
 // StandardConfig is a generic text and color object.
@@ -68,19 +68,6 @@ type Plugin struct {
 	Foreground string `json:"foreground"`
 }
 
-// RepositoryExtraConfig adds additional settings.
-type RepositoryExtraConfig struct {
-	StandardConfig
-	CommittedBg string `json:"committed_bg"`
-	UntrackedBg string `json:"untracked_bg"`
-}
-
-// RepositoryConfig holds the settings for the repositories.
-type RepositoryConfig struct {
-	Git       RepositoryExtraConfig `json:"git"`
-	Mercurial RepositoryExtraConfig `json:"mercurial"`
-}
-
 // NewConfig creates a new instance of Config.
 func NewConfig(filename string) *Config {
 	var config Config
@@ -123,17 +110,9 @@ func (config Config) Default() PowerColor {
 	pcolor.Directory.RdonlyDirectoryFg = readOnlyDirForeground
 	pcolor.Directory.RdonlyDirectoryBg = readOnlyDirBackground
 
-	pcolor.Repository.Git.Status = repositoryStatus
-	pcolor.Repository.Git.Foreground = repositoryForeground
-	pcolor.Repository.Git.Background = repositoryBackground
-	pcolor.Repository.Git.CommittedBg = repositoryCommittedBG
-	pcolor.Repository.Git.UntrackedBg = repositoryUntrackedBG
-
-	pcolor.Repository.Mercurial.Status = repositoryStatus
-	pcolor.Repository.Mercurial.Foreground = repositoryForeground
-	pcolor.Repository.Mercurial.Background = repositoryBackground
-	pcolor.Repository.Git.CommittedBg = repositoryCommittedBG
-	pcolor.Repository.Git.UntrackedBg = repositoryUntrackedBG
+	pcolor.Repository.Status = repositoryStatus
+	pcolor.Repository.Foreground = repositoryForeground
+	pcolor.Repository.Background = repositoryBackground
 
 	pcolor.Symbol.Regular = symbolRegular
 	pcolor.Symbol.SuperUser = symbolSuperUser
