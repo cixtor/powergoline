@@ -1,5 +1,5 @@
 /**
- * PowerGoLine
+ * Powergoline
  * https://cixtor.com/
  * https://github.com/cixtor/powergoline
  * https://en.wikipedia.org/wiki/Status_bar
@@ -21,11 +21,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 )
 
-// enabled defines a positive status.
-const enabled string = "enabled"
+// program is the canonical name of the binary.
+const program = "powergoline"
 
 // filename is the name of the configuration file.
 const filename = ".powergoline.json"
@@ -33,17 +34,12 @@ const filename = ".powergoline.json"
 func main() {
 	flag.Parse()
 
-	pogol := NewPowerGoLine(os.Getenv("HOME") + "/" + filename)
+	config, err := NewConfig(os.Getenv("HOME") + "/" + filename)
 
-	pogol.TermTitle()
-	pogol.DateTime()
-	pogol.Username()
-	pogol.Hostname()
-	pogol.WorkingDirectory()
-	pogol.RepoStatus()
-	pogol.ExecuteAllPlugins()
-	pogol.RootSymbol(flag.Arg(0))
-	pogol.PrintStatusLine()
+	if err != nil {
+		fmt.Println(err, ">>>\x20")
+		os.Exit(1)
+	}
 
-	os.Exit(0)
+	os.Exit(NewPowergoline(config).Render(flag.Arg(0)))
 }

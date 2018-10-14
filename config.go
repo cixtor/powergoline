@@ -2,45 +2,46 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"log"
+	"fmt"
 	"os"
 )
 
 // Config holds the CLI prompt settings.
 type Config struct {
-	filename string
-	values   PowerColor
+	Datetime   SimpleConfig     `json:"datetime"`
+	Username   SimpleConfig     `json:"username"`
+	Hostname   SimpleConfig     `json:"hostname"`
+	HomeDir    ColorsConfig     `json:"homedir"`
+	RdonlyDir  ColorsConfig     `json:"rdonlydir"`
+	CurrentDir CurrentDirectory `json:"currentdir"`
+	Repository SimpleConfig     `json:"repository"`
+	Plugins    []Plugin         `json:"plugins"`
+	Symbol     StatusSymbol     `json:"symbol"`
+	Status     StatusCode       `json:"status"`
 }
 
-// PowerColor is the base of the JSON object.
-type PowerColor struct {
-	Datetime   StandardConfig  `json:"datetime"`
-	Username   StandardConfig  `json:"username"`
-	Hostname   StandardConfig  `json:"hostname"`
-	Directory  DirectoryConfig `json:"directory"`
-	Repository StandardConfig  `json:"repository"`
-	Plugins    []Plugin        `json:"plugins"`
-	Symbol     StatusSymbol    `json:"symbol"`
-	Status     StatusCode      `json:"status"`
+// ColorsConfig is the foreground and background colors.
+type ColorsConfig struct {
+	Fg string `json:"foreground"`
+	Bg string `json:"background"`
 }
 
-// StandardConfig is a generic text and color object.
-type StandardConfig struct {
-	Status     string `json:"status"`
-	Foreground string `json:"foreground"`
-	Background string `json:"background"`
+// SimpleConfig is a generic text and color object.
+type SimpleConfig struct {
+	On bool `json:"enabled"`
+	ColorsConfig
 }
 
-// DirectoryConfig holds the settings for the directory segment.
-type DirectoryConfig struct {
-	MaximumSegments    string `json:"maximum_segments"`
-	HomeDirectoryFg    string `json:"home_directory_fg"`
-	HomeDirectoryBg    string `json:"home_directory_bg"`
-	WorkingDirectoryFg string `json:"working_directory_fg"`
-	WorkingDirectoryBg string `json:"working_directory_bg"`
-	RdonlyDirectoryFg  string `json:"rdonly_directory_fg"`
-	RdonlyDirectoryBg  string `json:"rdonly_directory_bg"`
+// CurrentDirectory is the configuration for the current working directory.
+type CurrentDirectory struct {
+	Size int `json:"size"`
+	ColorsConfig
+}
+
+// Plugin adds support for execution of external commands.
+type Plugin struct {
+	Command string `json:"command"`
+	ColorsConfig
 }
 
 // StatusCode holds the settings for the program exit codes.
@@ -61,117 +62,36 @@ type StatusSymbol struct {
 	SuperUser string `json:"super_user"`
 }
 
-// Plugin adds support for execution of external commands.
-type Plugin struct {
-	Command    string `json:"command"`
-	Background string `json:"background"`
-	Foreground string `json:"foreground"`
-}
-
 // NewConfig creates a new instance of Config.
-func NewConfig(filename string) *Config {
-	var config Config
-
-	config.filename = filename
-
-	values, err := config.Values()
-
-	if err != nil {
-		log.Println("powergoline;", err)
-		/* do not return; continue */
+//
+// The function attempts to read and decode`$HOME/.powergoline.json`
+//
+// If the configuration file does not exist, then it returns the default values
+// and attempts to write the default values into the aforementioned file for
+// future reads. If the file exists but contains malformed data, it returns the
+// default values and displays a warning to explain the file load issues.
+func NewConfig(filename string) (Config, error) {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return defaultConfig(), nil
 	}
 
-	config.values = values
-
-	return &config
-}
-
-// Default returns an object with the default configuration.
-func (config Config) Default() PowerColor {
-	var pcolor PowerColor
-
-	pcolor.Datetime.Status = datetimeStatus
-	pcolor.Datetime.Foreground = datetimeForeground
-	pcolor.Datetime.Background = datetimeBackground
-
-	pcolor.Username.Status = usernameStatus
-	pcolor.Username.Foreground = usernameForeground
-	pcolor.Username.Background = usernameBackground
-
-	pcolor.Hostname.Status = hostnameStatus
-	pcolor.Hostname.Foreground = hostnameForeground
-	pcolor.Hostname.Background = hostnameBackground
-
-	pcolor.Directory.MaximumSegments = maximumSegments
-	pcolor.Directory.HomeDirectoryFg = homeDirForeground
-	pcolor.Directory.HomeDirectoryBg = homeDirBackground
-	pcolor.Directory.WorkingDirectoryFg = workingDirForeground
-	pcolor.Directory.WorkingDirectoryBg = workingDirBackground
-	pcolor.Directory.RdonlyDirectoryFg = readOnlyDirForeground
-	pcolor.Directory.RdonlyDirectoryBg = readOnlyDirBackground
-
-	pcolor.Repository.Status = repositoryStatus
-	pcolor.Repository.Foreground = repositoryForeground
-	pcolor.Repository.Background = repositoryBackground
-
-	pcolor.Symbol.Regular = symbolRegular
-	pcolor.Symbol.SuperUser = symbolSuperUser
-
-	pcolor.Status.Symbol = statusSymbol
-	pcolor.Status.Success = statusSuccess
-	pcolor.Status.Failure = statusFailure
-	pcolor.Status.Misuse = statusMisuse
-	pcolor.Status.Permission = statusPermission
-	pcolor.Status.NotFound = statusNotFound
-	pcolor.Status.InvalidExit = statusInvalidExit
-	pcolor.Status.Terminated = statusTerminated
-
-	return pcolor
-}
-
-// Values returns the settings from the configuration file.
-func (config Config) Values() (PowerColor, error) {
-	if _, err := os.Stat(config.filename); os.IsNotExist(err) {
-		return config.NonExistingValues(config.filename)
-	}
-
-	return config.ExistingValues(config.filename)
-}
-
-// ExistingValues returns the configuration from a local file.
-func (config Config) ExistingValues(path string) (PowerColor, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(filename)
 
 	if err != nil {
-		return config.Default(), err
+		return defaultConfig(), fmt.Errorf(program+"; open config %s", err)
 	}
 
 	defer func() {
 		if err := file.Close(); err != nil {
-			log.Println("file.close;", err)
+			fmt.Println(program+"; exit config %s", err)
 		}
 	}()
 
-	var data PowerColor
+	var config Config
 
-	if err := json.NewDecoder(file).Decode(&data); err != nil {
-		return config.Default(), err
+	if err := json.NewDecoder(file).Decode(&config); err != nil {
+		return defaultConfig(), fmt.Errorf(program+"; read config %s", err)
 	}
 
-	return data, nil
-}
-
-// NonExistingValues creates the configuration file using default values.
-func (config Config) NonExistingValues(filename string) (PowerColor, error) {
-	data, err := json.MarshalIndent(config.Default(), "", "\t")
-
-	if err != nil {
-		return config.Default(), err
-	}
-
-	if err := ioutil.WriteFile(filename, data, 0644); err != nil {
-		return config.Default(), err
-	}
-
-	return config.Default(), nil
+	return config, nil
 }
