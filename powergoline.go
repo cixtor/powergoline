@@ -309,22 +309,24 @@ func (pogol *PowerGoLine) WorkingDirectory() {
 	}
 }
 
-// GitInformation defines a segment with information of a Git repository.
-func (pogol *PowerGoLine) GitInformation() {
+// RepoStatus defines a segment with information of a DCVS.
+func (pogol *PowerGoLine) RepoStatus() {
 	if pogol.config.values.Repository.Status != enabled {
 		return
 	}
 
+	var err error
+	var status RepoStatus
+
 	// check if a repository exists in the current folder.
-	if _, err := os.Stat(".git"); os.IsNotExist(err) {
-		return
+	if _, err = os.Stat(".git"); !os.IsNotExist(err) {
+		status, err = repoStatusGit()
+	} else if _, err = os.Stat(".hg"); !os.IsNotExist(err) {
+		status, err = repoStatusMercurial()
 	}
 
-	status, err := repoStatusGit()
-
 	if err != nil {
-		/* git is not installed */
-		/* not a git repository */
+		fmt.Println(err)
 		return
 	}
 
@@ -355,60 +357,6 @@ func (pogol *PowerGoLine) GitInformation() {
 		pogol.config.values.Repository.Foreground,
 		pogol.config.values.Repository.Background,
 	)
-	pogol.AddSegment(
-		"\uE0B0",
-		pogol.config.values.Repository.Background,
-		"automatic",
-	)
-}
-
-// MercurialInformation defines a segment with information of a Mercurial repository.
-func (pogol *PowerGoLine) MercurialInformation() {
-	if pogol.config.values.Repository.Status != enabled {
-		return
-	}
-
-	// check if a repository exists in the current folder.
-	if _, err := os.Stat(".hg"); os.IsNotExist(err) {
-		return
-	}
-
-	status, err := repoStatusMercurial()
-
-	if err != nil {
-		/* mercurial is not installed */
-		/* not a mercurial repository */
-		return
-	}
-
-	branch := fmt.Sprintf(" \uE0A0 %s ", status.Branch)
-
-	if status.Ahead > 0 {
-		branch += fmt.Sprintf("\u21E1%d ", status.Ahead)
-	}
-
-	if status.Behind > 0 {
-		branch += fmt.Sprintf("\u21E3%d ", status.Behind)
-	}
-
-	if status.Added > 0 {
-		branch += fmt.Sprintf("+%d ", status.Added)
-	}
-
-	if status.Modified > 0 {
-		branch += fmt.Sprintf("~%d ", status.Modified)
-	}
-
-	if status.Deleted > 0 {
-		branch += fmt.Sprintf("-%d ", status.Deleted)
-	}
-
-	pogol.AddSegment(
-		branch,
-		pogol.config.values.Repository.Foreground,
-		pogol.config.values.Repository.Background,
-	)
-
 	pogol.AddSegment(
 		"\uE0B0",
 		pogol.config.values.Repository.Background,
