@@ -1,56 +1,49 @@
 {
-  "username": {
-    "status": "enabled",
-    "foreground": "255",
-    "background": "031"
-  },
-  "hostname": {
-    "status": "enabled",
-    "foreground": "255",
-    "background": "038"
-  },
-  "directory": {
-    "maximum_segments": "1",
-    "home_directory_fg": "081",
-    "home_directory_bg": "024",
-    "working_directory_fg": "081",
-    "working_directory_bg": "024",
-    "rdonly_directory_fg": "255",
-    "rdonly_directory_bg": "054"
-  },
-  "status": {
-    "symbol": "000",
-    "success": "255",
-    "failure": "162",
-    "misuse": "003",
-    "permission": "004",
-    "not_found": "014",
-    "invalid_exit": "202",
-    "terminated": "240"
-  },
-  "symbol": {
-    "regular": "$",
-    "super_user": "#"
-  },
-  "datetime": {
-    "status": "disabled",
-    "foreground": "255",
-    "background": "018"
-  },
-  "repository": {
-    "git": {
-      "status": "enabled",
-      "foreground": "255",
-      "background": "075",
-      "committed_bg": "075",
-      "untracked_bg": "075"
-    },
-    "mercurial": {
-      "status": "enabled",
-      "foreground": "255",
-      "background": "075",
-      "committed_bg": "075",
-      "untracked_bg": "075"
-    }
-  }
+	"datetime": {
+		"enabled": true,
+		"foreground": "255",
+		"background": "018"
+	},
+	"username": {
+		"enabled": true,
+		"foreground": "255",
+		"background": "031"
+	},
+	"hostname": {
+		"enabled": true,
+		"foreground": "255",
+		"background": "038"
+	},
+	"homedir": {
+		"foreground": "081",
+		"background": "031"
+	},
+	"rdonlydir": {
+		"foreground": "255",
+		"background": "054"
+	},
+	"currentdir": {
+		"size": 4,
+		"foreground": "081",
+		"background": "024"
+	},
+	"repository": {
+		"enabled": true,
+		"foreground": "255",
+		"background": "075"
+	},
+	"symbol": {
+		"regular": "$",
+		"super_user": "#"
+	},
+	"status": {
+		"symbol": "000",
+		"success": "255",
+		"failure": "162",
+		"misuse": "003",
+		"permission": "004",
+		"not_found": "014",
+		"invalid_exit": "202",
+		"terminated": "240"
+	}
 }
