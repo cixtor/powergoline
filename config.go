@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -71,8 +72,12 @@ type StatusSymbol struct {
 // future reads. If the file exists but contains malformed data, it returns the
 // default values and displays a warning to explain the file load issues.
 func NewConfig(filename string) (Config, error) {
+	config := defaultConfig()
+
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return defaultConfig(), nil
+		data, _ := json.MarshalIndent(config, "", "\t")
+		_ = ioutil.WriteFile(filename, data, 0644)
+		return config, nil
 	}
 
 	file, err := os.Open(filename)
@@ -86,8 +91,6 @@ func NewConfig(filename string) (Config, error) {
 			fmt.Println(program+"; exit config %s", err)
 		}
 	}()
-
-	var config Config
 
 	if err := json.NewDecoder(file).Decode(&config); err != nil {
 		return defaultConfig(), fmt.Errorf(program+"; read config %s", err)
