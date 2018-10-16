@@ -6,20 +6,20 @@ const white = "255"
 func defaultConfig() Config {
 	var c Config
 
-	c.Datetime.On = false
+	c.Datetime.On = true
 	c.Datetime.Fg = white
 	c.Datetime.Bg = "013"
 
-	c.Username.On = false
+	c.Username.On = true
 	c.Username.Fg = white
 	c.Username.Bg = "033"
 
-	c.Hostname.On = false
+	c.Hostname.On = true
 	c.Hostname.Fg = white
-	c.Hostname.Bg = "105"
+	c.Hostname.Bg = "075"
 
 	c.HomeDir.Fg = white
-	c.HomeDir.Bg = "093"
+	c.HomeDir.Bg = "105"
 
 	c.RdonlyDir.Fg = white
 	c.RdonlyDir.Bg = "124"
@@ -28,9 +28,9 @@ func defaultConfig() Config {
 	c.CurrentDir.Fg = white
 	c.CurrentDir.Bg = "099"
 
-	c.Repository.On = false
+	c.Repository.On = true
 	c.Repository.Fg = "000"
-	c.Repository.Bg = "148"
+	c.Repository.Bg = "255"
 
 	c.Symbol.Regular = "$"
 	c.Symbol.SuperUser = "#"

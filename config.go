@@ -72,9 +72,10 @@ type StatusSymbol struct {
 // future reads. If the file exists but contains malformed data, it returns the
 // default values and displays a warning to explain the file load issues.
 func NewConfig(filename string) (Config, error) {
-	config := defaultConfig()
+	var config Config
 
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		config = defaultConfig()
 		data, _ := json.MarshalIndent(config, "", "\t")
 		_ = ioutil.WriteFile(filename, data, 0644)
 		return config, nil
