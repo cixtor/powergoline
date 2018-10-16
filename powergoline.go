@@ -293,17 +293,23 @@ func (p *Powergoline) RepoStatus() {
 	}
 
 	var err error
+	var stderr error
 	var status RepoStatus
 
 	// check if a repository exists in the current folder.
 	if _, err = os.Stat(".git"); !os.IsNotExist(err) {
-		status, err = repoStatusGit()
+		status, stderr = repoStatusGit()
 	} else if _, err = os.Stat(".hg"); !os.IsNotExist(err) {
-		status, err = repoStatusMercurial()
+		status, stderr = repoStatusMercurial()
 	}
 
-	if err != nil {
-		fmt.Println(err)
+	if stderr != nil {
+		fmt.Printf(program+"; repo %s\n", err)
+		return
+	}
+
+	// there is no info to show.
+	if len(status.Branch) == 0 {
 		return
 	}
 
