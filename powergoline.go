@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -75,13 +76,13 @@ func (p Powergoline) Render(status string) int {
 	p.CallPlugins()
 	p.RootSymbol(status)
 
-	p.PrintSegments()
+	p.PrintSegments(os.Stdout)
 
 	return 0
 }
 
 // Print sends a segment to the standard output.
-func (p Powergoline) Print(text string, fore string, back string) {
+func (p Powergoline) Print(w io.Writer, text string, fore string, back string) {
 	var color string
 
 	// Add the foreground and background colors.
@@ -95,15 +96,15 @@ func (p Powergoline) Print(text string, fore string, back string) {
 
 	// Draw the color sequences if necessary.
 	if len(color) > 0 {
-		fmt.Print("\\[\\e[" + color + "m\\]" + text + "\\[\\e[0m\\]")
+		fmt.Fprint(w, "\\[\\e["+color+"m\\]"+text+"\\[\\e[0m\\]")
 		return
 	}
 
-	fmt.Print(text)
+	fmt.Fprint(w, text)
 }
 
 // PrintSegments prints all the segments as the command prompt.
-func (p Powergoline) PrintSegments() {
+func (p Powergoline) PrintSegments(w io.Writer) {
 	var curr Segment
 	var next Segment
 
@@ -121,10 +122,10 @@ func (p Powergoline) PrintSegments() {
 		curr.Text = strings.Replace(curr.Text, "$", "\\$", -1)
 		curr.Text = strings.Replace(curr.Text, "`", "\\`", -1)
 
-		p.Print(curr.Text, curr.Fore, curr.Back)
+		p.Print(w, curr.Text, curr.Fore, curr.Back)
 	}
 
-	fmt.Print("\u0020\n")
+	fmt.Fprint(w, "\u0020\n")
 }
 
 // IsWritable checks if the process can write in a directory.
