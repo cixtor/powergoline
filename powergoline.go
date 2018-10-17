@@ -375,7 +375,7 @@ func (p *Powergoline) ExecutePlugin(addon Plugin) {
 
 // RootSymbol defines a segment with an indicator for root users.
 //
-// System Status Codes:
+// System status codes:
 //
 //   0     - Operation success and generic status code.
 //   1     - Catchall for general errors and failures.

@@ -158,3 +158,64 @@ func TestStatusMercurial(t *testing.T) {
 		Added:    2,
 	})
 }
+
+func compareRootSymbol(t *testing.T, status string, color string) {
+	var buf bytes.Buffer
+
+	a := []byte("\\[\\e[48;5;")
+	b := []byte("m\\] r \\[\\e[0m\\]\\[\\e[38;5;")
+	c := []byte("m\\]\ue0b0\\[\\e[0m\\] \n")
+
+	p := NewPowergoline(Config{
+		Symbol: StatusSymbol{
+			Regular:   "r",
+			SuperUser: "s",
+		},
+		Status: StatusCode{
+			Success:     "c000", // 0 - Operation success and generic status code.
+			Failure:     "c111", // 1 - Catchall for general errors and failures.
+			Misuse:      "c222", // 2 - Misuse of shell builtins, missing command or permission problem.
+			Permission:  "c126", // 126 - Cannot execute command, permission problem, or not an executable.
+			NotFound:    "c127", // 127 - Command not found, illegal path, or possible typo.
+			InvalidExit: "c128", // 128 - Invalid argument to exit, only use range 0-255.
+			FatalError:  "c129", // 128+n - Fatal error signal where "n" is the PID.
+			Terminated:  "c130", // 130 - Script terminated by Control-C.
+			Invalid:     "c256", // 255* - Exit status out of range.
+		},
+	})
+
+	var expected []byte
+
+	p.RootSymbol(status)
+	p.PrintSegments(&buf)
+
+	expected = append(expected, a...)
+	expected = append(expected, []byte(color)...)
+	expected = append(expected, b...)
+	expected = append(expected, []byte(color)...)
+	expected = append(expected, c...)
+
+	if !bytes.Equal(buf.Bytes(), expected) {
+		t.Fatalf("invalid root symbol output:\nExpected: `%q`\nActual:   `%q`", buf.Bytes(), expected)
+	}
+}
+
+func TestRootSymbol000(t *testing.T) { compareRootSymbol(t, "0", "c000") }
+
+func TestRootSymbol111(t *testing.T) { compareRootSymbol(t, "1", "c111") }
+
+func TestRootSymbol222(t *testing.T) { compareRootSymbol(t, "2", "c222") }
+
+func TestRootSymbol126(t *testing.T) { compareRootSymbol(t, "126", "c126") }
+
+func TestRootSymbol127(t *testing.T) { compareRootSymbol(t, "127", "c127") }
+
+func TestRootSymbol128(t *testing.T) { compareRootSymbol(t, "128", "c128") }
+
+func TestRootSymbol129(t *testing.T) { compareRootSymbol(t, "129", "c222") }
+
+func TestRootSymbol130(t *testing.T) { compareRootSymbol(t, "130", "c130") }
+
+func TestRootSymbol256(t *testing.T) { compareRootSymbol(t, "256", "c222") }
+
+func TestRootSymbolABC(t *testing.T) { compareRootSymbol(t, "abc", "c222") }
