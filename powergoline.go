@@ -486,6 +486,7 @@ func repoStatusGitParse(lines [][]byte) (RepoStatus, error) {
 
 // repoStatusGitBranch parses the header of the `git status` command.
 //
+//   ## master
 //   ## master...origin/master
 //   ## master...origin/master [ahead 5]
 //   ## master...origin/master [behind 8]
@@ -494,32 +495,41 @@ func repoStatusGitBranch(status *RepoStatus, line []byte) {
 	var bols [][]byte
 	var clean []byte
 
+	// add ellipsis to parse branch without origin.
+	line = append(line, []byte{'.', '.', '.'}...)
+
 	if bytes.Contains(line, []byte("...")) {
 		status.Branch = line[3:bytes.Index(line, []byte("..."))]
 	}
 
-	if bytes.Contains(line, []byte{'['}) && bytes.Contains(line, []byte{']'}) {
-		line = line[bytes.Index(line, []byte("["))+1 : len(line)-1]
-		line = bytes.Replace(line, []byte("\x20"), []byte{}, -1)
-		bols = bytes.Split(line, []byte{','})
+	// detect limits for the ahead/behind status.
+	opening := bytes.Index(line, []byte{'['}) + 1
+	closing := bytes.Index(line, []byte{']'}) + 0
 
-		for _, part := range bols {
-			if len(part) < 6 {
-				continue
+	if opening == -1 || closing == -1 {
+		return
+	}
+
+	line = line[opening:closing]
+	line = bytes.Replace(line, []byte("\x20"), []byte{}, -1)
+	bols = bytes.Split(line, []byte{','})
+
+	for _, part := range bols {
+		if len(part) < 6 {
+			continue
+		}
+
+		if bytes.Equal(part[0:5], []byte("ahead")) {
+			clean = bytes.Replace(part, []byte("ahead"), []byte{}, 1)
+			if number, err := strconv.Atoi(string(clean)); err == nil {
+				status.Ahead = number
 			}
+		}
 
-			if bytes.Equal(part[0:5], []byte("ahead")) {
-				clean = bytes.Replace(part, []byte("ahead"), []byte{}, 1)
-				if number, err := strconv.Atoi(string(clean)); err == nil {
-					status.Ahead = number
-				}
-			}
-
-			if bytes.Equal(part[0:5], []byte("behin")) {
-				clean = bytes.Replace(part, []byte("behind"), []byte{}, 1)
-				if number, err := strconv.Atoi(string(clean)); err == nil {
-					status.Behind = number
-				}
+		if bytes.Equal(part[0:5], []byte("behin")) {
+			clean = bytes.Replace(part, []byte("behind"), []byte{}, 1)
+			if number, err := strconv.Atoi(string(clean)); err == nil {
+				status.Behind = number
 			}
 		}
 	}
