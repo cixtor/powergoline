@@ -159,6 +159,22 @@ func TestStatusMercurial(t *testing.T) {
 	})
 }
 
+func TestStatusGitNoOrigin(t *testing.T) {
+	lines := [][]byte{
+		[]byte("## develop"),
+	}
+
+	status, err := repoStatusGitParse(lines)
+
+	if err != nil {
+		t.Fatalf("repoStatusGitParse %s", err)
+	}
+
+	compareRepoStatus(t, status, RepoStatus{
+		Branch: []byte("develop"),
+	})
+}
+
 func compareRootSymbol(t *testing.T, status string, color string) {
 	var buf bytes.Buffer
 
@@ -178,9 +194,7 @@ func compareRootSymbol(t *testing.T, status string, color string) {
 			Permission:  "c126", // 126 - Cannot execute command, permission problem, or not an executable.
 			NotFound:    "c127", // 127 - Command not found, illegal path, or possible typo.
 			InvalidExit: "c128", // 128 - Invalid argument to exit, only use range 0-255.
-			FatalError:  "c129", // 128+n - Fatal error signal where "n" is the PID.
 			Terminated:  "c130", // 130 - Script terminated by Control-C.
-			Invalid:     "c256", // 255* - Exit status out of range.
 		},
 	})
 
