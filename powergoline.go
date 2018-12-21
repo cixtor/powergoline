@@ -419,17 +419,28 @@ func (p *Powergoline) RootSymbol(status string) {
 
 // runcmd executes an external command and returns the output.
 func call(name string, arg ...string) ([]byte, error) {
-	out, err := exec.Command(name, arg...).CombinedOutput() // #nosec
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 
-	if err != nil {
-		return nil, err
+	cmd := exec.Command(name, arg...)
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		if stderr.Len() == 0 {
+			return nil, err
+		}
+
+		// include additional information, if possible.
+		return nil, fmt.Errorf("%s", stderr.String())
 	}
 
-	if len(out) == 0 {
+	if stdout.Len() == 0 {
 		return nil, errEmptyOutput
 	}
 
-	return bytes.Trim(out, "\n"), nil
+	return bytes.Trim(stdout.Bytes(), "\n"), nil
 }
 
 // repoStatusGit returns information about the current state of a Git repository.
