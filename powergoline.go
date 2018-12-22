@@ -113,7 +113,7 @@ func (p Powergoline) PrintSegments(w io.Writer) {
 	for key := 0; key < ttlsegms; key++ {
 		curr = p.pieces[key]
 
-		if curr.Back == "automatic" {
+		if curr.Back == "automatic" && len(p.pieces) > key+1 {
 			next = p.pieces[key+1]
 			curr.Back = next.Back
 		}
