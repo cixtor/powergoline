@@ -68,7 +68,7 @@ func (p *Powergoline) AddSegment(text string, fore string, back string) {
 // Render sends all the segments to the standard output.
 func (p Powergoline) Render(status string) int {
 	p.TermTitle()
-	p.DateTime()
+	p.Datetime()
 	p.Username()
 	p.Hostname()
 	p.Directories()
@@ -143,8 +143,8 @@ func (p *Powergoline) TermTitle() {
 	p.AddSegment("\\[\\e]0;\\u@\\h: \\w\\a\\]", "", "")
 }
 
-// DateTime defines a segment with the current date and time.
-func (p *Powergoline) DateTime() {
+// Datetime defines a segment with the current date and time.
+func (p *Powergoline) Datetime() {
 	if !p.config.Datetime.On {
 		return
 	}

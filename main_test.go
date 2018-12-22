@@ -233,3 +233,110 @@ func TestRootSymbol130(t *testing.T) { compareRootSymbol(t, "130", "c130") }
 func TestRootSymbol256(t *testing.T) { compareRootSymbol(t, "256", "c222") }
 
 func TestRootSymbolABC(t *testing.T) { compareRootSymbol(t, "abc", "c222") }
+
+func BenchmarkAll(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{
+		Datetime:   SimpleConfig{On: true},
+		Username:   SimpleConfig{On: true},
+		Hostname:   SimpleConfig{On: true},
+		Repository: SimpleConfig{On: true},
+	})
+
+	for i := 0; i < b.N; i++ {
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkTermTitle(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{})
+
+	for i := 0; i < b.N; i++ {
+		p.TermTitle()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkDatetime(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{Datetime: SimpleConfig{On: true}})
+
+	for i := 0; i < b.N; i++ {
+		p.Datetime()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkUsername(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{Username: SimpleConfig{On: true}})
+
+	for i := 0; i < b.N; i++ {
+		p.Username()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkHostname(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{Hostname: SimpleConfig{On: true}})
+
+	for i := 0; i < b.N; i++ {
+		p.Hostname()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkDirectories(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{})
+
+	for i := 0; i < b.N; i++ {
+		p.Directories()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkRepoStatus(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{Repository: SimpleConfig{On: true}})
+
+	for i := 0; i < b.N; i++ {
+		p.RepoStatus()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkCallPlugins(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{
+		Plugins: []Plugin{
+			{Command: "echo"},
+		},
+	})
+
+	for i := 0; i < b.N; i++ {
+		p.CallPlugins()
+		p.PrintSegments(&buf)
+	}
+}
+
+func BenchmarkRootSymbol(b *testing.B) {
+	var buf bytes.Buffer
+
+	p := NewPowergoline(Config{})
+
+	for i := 0; i < b.N; i++ {
+		p.RootSymbol("0")
+		p.PrintSegments(&buf)
+	}
+}

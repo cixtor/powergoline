@@ -43,3 +43,19 @@ Below is an example with two plugins `timestamp` and `shrug`. Any command availa
   }
 ]
 ```
+
+### Performance
+
+```
+| Segment     | Iterations |       Speed N1 |
+|-------------|------------|----------------|
+| All         |   20000000 |     73.6 ns/op |
+| TermTitle   |      10000 |   862544 ns/op |
+| Datetime    |      10000 |  1411974 ns/op |
+| Username    |      10000 |  1291571 ns/op |
+| Hostname    |      10000 |  1274002 ns/op |
+| Directories |      10000 |  4608480 ns/op |
+| RepoStatus  |        100 | 15300476 ns/op |
+| CallPlugins |        100 | 14236176 ns/op |
+| RootSymbol  |      10000 |  1398324 ns/op |
+```
