@@ -245,6 +245,15 @@ func BenchmarkAll(b *testing.B) {
 	})
 
 	for i := 0; i < b.N; i++ {
+		p.TermTitle()
+		p.Datetime()
+		p.Username()
+		p.Hostname()
+		p.Directories()
+		p.RepoStatus()
+		p.CallPlugins()
+		p.RootSymbol("0")
+
 		p.PrintSegments(&buf)
 	}
 }
