@@ -15,6 +15,33 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// u000a is Unicode for `\n` (new line).
+const u000a = "\u000a"
+
+// u0020 is Unicode for `\s` (whitespace).
+const u0020 = "\u0020"
+
+// u2026 is Unicode for `…` (ellipsis).
+const u2026 = "\u2026"
+
+// u21E1 is Unicode for `⇡` (upwards dashed arrow).
+const u21E1 = "\u21E1"
+
+// u21E3 is Unicode for `⇣` (downwards dashed arrow).
+const u21E3 = "\u21E3"
+
+// uE0A0 is Unicode for `` (GitHub fork symbol).
+const uE0A0 = "\uE0A0"
+
+// uE0A2 is Unicode for `` (GitHub lock symbol).
+const uE0A2 = "\uE0A2"
+
+// uE0B0 is Unicode for `` (powerline arrow body).
+const uE0B0 = "\uE0B0"
+
+// uE0B1 is Unicode for `` (powerline arrow line).
+const uE0B1 = "\uE0B1"
+
 // errEmptyOutput defines an error when executing a command with no output.
 var errEmptyOutput = errors.New("empty output")
 
@@ -125,7 +152,7 @@ func (p Powergoline) PrintSegments(w io.Writer) {
 		p.Print(w, curr.Text, curr.Fore, curr.Back)
 	}
 
-	fmt.Fprint(w, "\u0020\n")
+	fmt.Fprint(w, u0020+u000a)
 }
 
 // IsWritable checks if the process can write in a directory.
@@ -150,12 +177,12 @@ func (p *Powergoline) Datetime() {
 	}
 
 	p.AddSegment(
-		"\x20"+time.Now().Format("15:04:05")+"\x20",
+		u0020+time.Now().Format("15:04:05")+u0020,
 		p.config.Datetime.Fg,
 		p.config.Datetime.Bg,
 	)
 	p.AddSegment(
-		"\uE0B0",
+		uE0B0,
 		p.config.Datetime.Bg,
 		p.config.Username.Bg,
 	)
@@ -168,12 +195,12 @@ func (p *Powergoline) Username() {
 	}
 
 	p.AddSegment(
-		"\x20\\u\x20",
+		u0020+"\\u"+u0020,
 		p.config.Username.Fg,
 		p.config.Username.Bg,
 	)
 	p.AddSegment(
-		"\uE0B0",
+		uE0B0,
 		p.config.Username.Bg,
 		"automatic",
 	)
@@ -186,12 +213,12 @@ func (p *Powergoline) Hostname() {
 	}
 
 	p.AddSegment(
-		"\x20\\h\x20",
+		u0020+"\\h"+u0020,
 		p.config.Hostname.Fg,
 		p.config.Hostname.Bg,
 	)
 	p.AddSegment(
-		"\uE0B0",
+		uE0B0,
 		p.config.Hostname.Bg,
 		"automatic",
 	)
@@ -200,12 +227,12 @@ func (p *Powergoline) Hostname() {
 // HomeDirectory defines a segment with current directory path.
 func (p *Powergoline) HomeDirectory() {
 	p.AddSegment(
-		"\x20~\x20",
+		u0020+"~"+u0020,
 		p.config.HomeDir.Fg,
 		p.config.HomeDir.Bg,
 	)
 	p.AddSegment(
-		"\uE0B0",
+		uE0B0,
 		p.config.HomeDir.Bg,
 		"automatic",
 	)
@@ -231,7 +258,7 @@ func (p *Powergoline) Directories() {
 	if ttlparts > maxsegms {
 		newparts := make([]string, 0)
 		offset := (maxsegms - 1)
-		newparts = append(newparts, "\u2026")
+		newparts = append(newparts, u2026)
 		for k := offset; k >= 0; k-- {
 			newparts = append(newparts, dirparts[lastsegm-k])
 		}
@@ -251,20 +278,20 @@ func (p *Powergoline) Directories() {
 		}
 
 		p.AddSegment(
-			"\x20"+folder+"\x20",
+			u0020+folder+u0020,
 			p.config.CurrentDir.Fg,
 			p.config.CurrentDir.Bg,
 		)
 
 		if key == lastsegm {
 			p.AddSegment(
-				"\uE0B0",
+				uE0B0,
 				p.config.CurrentDir.Bg,
 				"automatic",
 			)
 		} else {
 			p.AddSegment(
-				"\uE0B1",
+				uE0B1,
 				p.config.CurrentDir.Fg,
 				p.config.CurrentDir.Bg,
 			)
@@ -274,13 +301,13 @@ func (p *Powergoline) Directories() {
 	// Draw lock if current directory is read-only.
 	if p.IsRdonlyDir(currdir) {
 		p.AddSegment(
-			"\x20\uE0A2\x20",
+			u0020+uE0A2+u0020,
 			p.config.RdonlyDir.Fg,
 			p.config.RdonlyDir.Bg,
 		)
 
 		p.AddSegment(
-			"\uE0B0",
+			uE0B0,
 			p.config.RdonlyDir.Bg,
 			"automatic",
 		)
@@ -314,14 +341,14 @@ func (p *Powergoline) RepoStatus() {
 		return
 	}
 
-	branch := fmt.Sprintf(" \uE0A0 %s ", status.Branch)
+	branch := fmt.Sprintf(" %s %s ", uE0A0, status.Branch)
 
 	if status.Ahead > 0 {
-		branch += fmt.Sprintf("\u21E1%d ", status.Ahead)
+		branch += fmt.Sprintf("%s%d ", u21E1, status.Ahead)
 	}
 
 	if status.Behind > 0 {
-		branch += fmt.Sprintf("\u21E3%d ", status.Behind)
+		branch += fmt.Sprintf("%s%d ", u21E3, status.Behind)
 	}
 
 	if status.Added > 0 {
@@ -342,7 +369,7 @@ func (p *Powergoline) RepoStatus() {
 		p.config.Repository.Bg,
 	)
 	p.AddSegment(
-		"\uE0B0",
+		uE0B0,
 		p.config.Repository.Bg,
 		"automatic",
 	)
@@ -369,8 +396,8 @@ func (p *Powergoline) ExecutePlugin(addon Plugin) {
 		output = []byte(err.Error())
 	}
 
-	p.AddSegment("\x20"+string(output)+"\x20", addon.Fg, addon.Bg)
-	p.AddSegment("\uE0B0", addon.Bg, "automatic")
+	p.AddSegment(u0020+string(output)+u0020, addon.Fg, addon.Bg)
+	p.AddSegment(uE0B0, addon.Bg, "automatic")
 }
 
 // RootSymbol defines a segment with an indicator for root users.
@@ -413,8 +440,8 @@ func (p *Powergoline) RootSymbol(status string) {
 		color = p.config.Status.Misuse
 	}
 
-	p.AddSegment("\x20"+symbol+"\x20", p.config.Status.Symbol, color)
-	p.AddSegment("\uE0B0", color, "")
+	p.AddSegment(u0020+symbol+u0020, p.config.Status.Symbol, color)
+	p.AddSegment(uE0B0, color, "")
 }
 
 // runcmd executes an external command and returns the output.
@@ -522,7 +549,7 @@ func repoStatusGitBranch(status *RepoStatus, line []byte) {
 	}
 
 	line = line[opening:closing]
-	line = bytes.Replace(line, []byte("\x20"), []byte{}, -1)
+	line = bytes.Replace(line, []byte(u0020), []byte{}, -1)
 	bols = bytes.Split(line, []byte{','})
 
 	for _, part := range bols {
