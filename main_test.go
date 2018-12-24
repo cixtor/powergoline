@@ -237,14 +237,14 @@ func TestRootSymbolABC(t *testing.T) { compareRootSymbol(t, "abc", "c222") }
 func BenchmarkAll(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{
-		Datetime:   SimpleConfig{On: true},
-		Username:   SimpleConfig{On: true},
-		Hostname:   SimpleConfig{On: true},
-		Repository: SimpleConfig{On: true},
-	})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{
+			Datetime:   SimpleConfig{On: true},
+			Username:   SimpleConfig{On: true},
+			Hostname:   SimpleConfig{On: true},
+			Repository: SimpleConfig{On: true},
+		})
+
 		p.TermTitle()
 		p.Datetime()
 		p.Username()
@@ -261,9 +261,8 @@ func BenchmarkAll(b *testing.B) {
 func BenchmarkTermTitle(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{})
 		p.TermTitle()
 		p.PrintSegments(&buf)
 	}
@@ -272,9 +271,8 @@ func BenchmarkTermTitle(b *testing.B) {
 func BenchmarkDatetime(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{Datetime: SimpleConfig{On: true}})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{Datetime: SimpleConfig{On: true}})
 		p.Datetime()
 		p.PrintSegments(&buf)
 	}
@@ -283,9 +281,8 @@ func BenchmarkDatetime(b *testing.B) {
 func BenchmarkUsername(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{Username: SimpleConfig{On: true}})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{Username: SimpleConfig{On: true}})
 		p.Username()
 		p.PrintSegments(&buf)
 	}
@@ -294,9 +291,8 @@ func BenchmarkUsername(b *testing.B) {
 func BenchmarkHostname(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{Hostname: SimpleConfig{On: true}})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{Hostname: SimpleConfig{On: true}})
 		p.Hostname()
 		p.PrintSegments(&buf)
 	}
@@ -305,9 +301,8 @@ func BenchmarkHostname(b *testing.B) {
 func BenchmarkDirectories(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{})
 		p.Directories()
 		p.PrintSegments(&buf)
 	}
@@ -316,9 +311,8 @@ func BenchmarkDirectories(b *testing.B) {
 func BenchmarkRepoStatus(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{Repository: SimpleConfig{On: true}})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{Repository: SimpleConfig{On: true}})
 		p.RepoStatus()
 		p.PrintSegments(&buf)
 	}
@@ -327,13 +321,12 @@ func BenchmarkRepoStatus(b *testing.B) {
 func BenchmarkCallPlugins(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{
-		Plugins: []Plugin{
-			{Command: "echo"},
-		},
-	})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{
+			Plugins: []Plugin{
+				{Command: "echo"},
+			},
+		})
 		p.CallPlugins()
 		p.PrintSegments(&buf)
 	}
@@ -342,9 +335,8 @@ func BenchmarkCallPlugins(b *testing.B) {
 func BenchmarkRootSymbol(b *testing.B) {
 	var buf bytes.Buffer
 
-	p := NewPowergoline(Config{})
-
 	for i := 0; i < b.N; i++ {
+		p := NewPowergoline(Config{})
 		p.RootSymbol("0")
 		p.PrintSegments(&buf)
 	}
