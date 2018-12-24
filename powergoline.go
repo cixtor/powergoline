@@ -184,7 +184,7 @@ func (p *Powergoline) Datetime() {
 	p.AddSegment(
 		uE0B0,
 		p.config.Datetime.Bg,
-		p.config.Username.Bg,
+		"automatic",
 	)
 }
 
