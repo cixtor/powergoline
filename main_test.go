@@ -242,7 +242,9 @@ func BenchmarkAll(b *testing.B) {
 			Datetime:   SimpleConfig{On: true},
 			Username:   SimpleConfig{On: true},
 			Hostname:   SimpleConfig{On: true},
-			Repository: SimpleConfig{On: true},
+			CurrentDir: CurrentDirectory{Size: 3},
+			Repository: RepositoryConfig{SimpleConfig: SimpleConfig{On: true}},
+			Plugins:    []Plugin{{Command: "echo"}},
 		})
 
 		p.TermTitle()
@@ -302,7 +304,7 @@ func BenchmarkDirectories(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{})
+		p := NewPowergoline(Config{CurrentDir: CurrentDirectory{Size: 3}})
 		p.Directories()
 		p.PrintSegments(&buf)
 	}
@@ -312,7 +314,13 @@ func BenchmarkRepoStatus(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{Repository: SimpleConfig{On: true}})
+		p := NewPowergoline(Config{
+			Repository: RepositoryConfig{
+				SimpleConfig: SimpleConfig{
+					On: true,
+				},
+			},
+		})
 		p.RepoStatus()
 		p.PrintSegments(&buf)
 	}

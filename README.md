@@ -47,13 +47,13 @@ Below is an example with two plugins `timestamp` and `shrug`. Any command availa
 ### Performance
 
 ```
-BenchmarkAll-4                 200     6951091 ns/op
-BenchmarkTermTitle-4       3000000         483 ns/op
-BenchmarkDatetime-4        1000000        1104 ns/op
-BenchmarkUsername-4        2000000         892 ns/op
-BenchmarkHostname-4        2000000         865 ns/op
-BenchmarkDirectories-4      100000       18718 ns/op
-BenchmarkRepoStatus-4          200     7779146 ns/op
-BenchmarkCallPlugins-4         300     4440169 ns/op
-BenchmarkRootSymbol-4      1000000        1697 ns/op
+BenchmarkAll-4                 115     9574368 ns/op
+BenchmarkTermTitle-4       3126940         366 ns/op
+BenchmarkDatetime-4         947794        1122 ns/op
+BenchmarkUsername-4        1444171         789 ns/op
+BenchmarkHostname-4        1585209         755 ns/op
+BenchmarkDirectories-4      106413       11092 ns/op
+BenchmarkRepoStatus-4          136    10050039 ns/op
+BenchmarkCallPlugins-4         271     4261030 ns/op
+BenchmarkRootSymbol-4      1127618        1169 ns/op
 ```

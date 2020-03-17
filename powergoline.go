@@ -314,9 +314,26 @@ func (p *Powergoline) Directories() {
 	}
 }
 
+// RepoStatusExclude checks if the current folder excludes repository status.
+func (p *Powergoline) RepoStatusExclude() bool {
+	if !p.config.Repository.On {
+		return true
+	}
+
+	currdir := os.Getenv("PWD")
+
+	for _, folder := range p.config.Repository.Exclude {
+		if currdir == folder {
+			return true
+		}
+	}
+
+	return false
+}
+
 // RepoStatus defines a segment with information of a DCVS.
 func (p *Powergoline) RepoStatus() {
-	if !p.config.Repository.On {
+	if p.RepoStatusExclude() {
 		return
 	}
 

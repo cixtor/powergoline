@@ -15,7 +15,7 @@ type Config struct {
 	HomeDir    ColorsConfig     `json:"homedir"`
 	RdonlyDir  ColorsConfig     `json:"rdonlydir"`
 	CurrentDir CurrentDirectory `json:"currentdir"`
-	Repository SimpleConfig     `json:"repository"`
+	Repository RepositoryConfig `json:"repository"`
 	Plugins    []Plugin         `json:"plugins"`
 	Symbol     StatusSymbol     `json:"symbol"`
 	Status     StatusCode       `json:"status"`
@@ -31,6 +31,12 @@ type ColorsConfig struct {
 type SimpleConfig struct {
 	On bool `json:"enabled"`
 	ColorsConfig
+}
+
+type RepositoryConfig struct {
+	SimpleConfig
+	Exclude []string `json:"exclude,omitempty"`
+	Include []string `json:"include,omitempty"`
 }
 
 // CurrentDirectory is the configuration for the current working directory.
