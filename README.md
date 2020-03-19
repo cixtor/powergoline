@@ -1,33 +1,34 @@
 # Powergoline
 
-A lightweight status line for your terminal emulator. This project aims to be a lightweight alternative for the [powerline](https://github.com/powerline/powerline) project which is a status line plugin for vim that also provides support for several other applications, including zsh, bash, tmux, IPython, Awesome and Qtile.
+A lightweight status line for your terminal emulator. This project aims to be a lightweight alternative for [powerline](https://github.com/powerline/powerline) a popular statusline plugin for VIm that statuslines and prompts for several other applications, including zsh, bash, tmux, IPython, Awesome and Qtile.
 
-### Installation
+## Installation
 
 1. Install a patched monospace font [from here](https://github.com/powerline/fonts)
 1. `go get -u github.com/cixtor/powergoline`
+1. Test using this command: `command powergoline`
 1. Add this function to your `.bashrc` configuration
 
 ```sh
 function set_prompt_command() {
-  export PS1="$($HOME/powergoline $? 2> /dev/null)"
+  export PS1="$(powergoline $? 2> /dev/null)"
 }
 export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
 ```
 
 ![powergoline](screenshot.png)
 
-### Configuration
+## Configuration
 
-The program creates a JSON file with the default configuration in the home directory `$HOME/.powergoline.json`. You can modify this file to hide different segments of the user prompt. You can control the CVS (Git and Mercurial) integration, the number of folders to display, hide the date, username, or hostname, extend the prompt with custom plugins, among other things. The configuration file resets if you delete this file.
+The program creates a JSON file with the default configuration in the home directory `$HOME/.powergoline.json`. You can modify this file to enable or disable different segments of the user prompt. You can control the CVS integration (Git and Mercurial), number of folders, date and time, username, hostname, you can even add your own segments to the prompt with custom plugins. You can reset the configuration by deleting this file.
 
 Some themes are available in `$GOPATH/src/github.com/cixtor/powergoline/themes/`
 
-### Plugins
+## Plugins
 
-The program allows you to execute external commands to complement the information already provided by the built-in features. The output of these external programs is expected to be a single line. They will all appear before the status symbol, and you can configure the background and foreground colors. You can execute as many plugins as you want.
+The program allows you to execute external commands to complement the information provided by the built-in features. The output of these external programs is expected to be a single line. They will all appear before the status symbol and you can configure the background and foreground colors. You can execute as many plugins as you want.
 
-Below is an example with two plugins `timestamp` and `shrug`. Any command available via `$PATH` is also available inside the plugins environment. Error messages sent to `/dev/stderr` are printed as long as the exit code is one, otherwise, `/dev/stdout` will be preferred.
+Below is an example using two plugins `timestamp` and `shrug`. Executable files in `$PATH` are also available inside the plugins environment. By default, the prompt prints everything the plugin sends to `/dev/stdout`. You can report errors by sending a message to `/dev/stderr` and stopping the script with exit code `1` (one).
 
 ```
 "plugins": [
@@ -44,7 +45,7 @@ Below is an example with two plugins `timestamp` and `shrug`. Any command availa
 ]
 ```
 
-### Performance
+## Performance
 
 ```
 BenchmarkAll-4                 115     9574368 ns/op
