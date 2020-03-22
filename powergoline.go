@@ -59,9 +59,11 @@ type Powergoline struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	Text string
-	Fore string
-	Back string
+	Text  string
+	Fore  string
+	Back  string
+	Index int
+	Print bool
 }
 
 // RepoStatus holds the information of the current state of a repository, this
@@ -394,17 +396,39 @@ func (p *Powergoline) RepoStatus() {
 
 // CallPlugins runs all the user defined plugins.
 func (p *Powergoline) CallPlugins() {
-	for _, metadata := range p.config.Plugins {
-		p.ExecutePlugin(metadata)
+	sem := make(chan bool, 20)
+	total := len(p.config.Plugins)
+	output := make(chan Segment)
+	bucket := make([]Segment, total)
+
+	for index, metadata := range p.config.Plugins {
+		go p.ExecutePlugin(sem, output, index, metadata)
+	}
+
+	var seg Segment
+	for i := 0; i < total; i++ {
+		seg = <-output
+		bucket[seg.Index] = seg
+	}
+
+	for i := 0; i < total; i++ {
+		if !bucket[i].Print {
+			continue
+		}
+		p.AddSegment(bucket[i].Text, bucket[i].Fore, bucket[i].Back)
+		p.AddSegment(uE0B0, p.config.Plugins[i].Bg, "automatic")
 	}
 }
 
 // ExecutePlugin runs an user defined external command.
-func (p *Powergoline) ExecutePlugin(addon Plugin) {
+func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, addon Plugin) {
+	sem <- true /* block */
+	defer func() { <-sem }()
+
 	output, err := call(addon.Command)
 
 	if err == errEmptyOutput {
-		/* no output */
+		out <- Segment{Index: index}
 		return
 	}
 
@@ -413,8 +437,13 @@ func (p *Powergoline) ExecutePlugin(addon Plugin) {
 		output = []byte(err.Error())
 	}
 
-	p.AddSegment(u0020+string(output)+u0020, addon.Fg, addon.Bg)
-	p.AddSegment(uE0B0, addon.Bg, "automatic")
+	out <- Segment{
+		Text:  u0020 + string(output) + u0020,
+		Fore:  addon.Fg,
+		Back:  addon.Bg,
+		Index: index,
+		Print: true,
+	}
 }
 
 // RootSymbol defines a segment with an indicator for root users.

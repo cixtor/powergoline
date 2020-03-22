@@ -48,13 +48,13 @@ Below is an example using two plugins `timestamp` and `shrug`. Executable files 
 ## Performance
 
 ```
-BenchmarkAll-4                 115     9574368 ns/op
-BenchmarkTermTitle-4       3126940         366 ns/op
-BenchmarkDatetime-4         947794        1122 ns/op
-BenchmarkUsername-4        1444171         789 ns/op
-BenchmarkHostname-4        1585209         755 ns/op
-BenchmarkDirectories-4      106413       11092 ns/op
-BenchmarkRepoStatus-4          136    10050039 ns/op
-BenchmarkCallPlugins-4         271     4261030 ns/op
-BenchmarkRootSymbol-4      1127618        1169 ns/op
+BenchmarkAll-4                 126     9462561 ns/op
+BenchmarkTermTitle-4       3224344         365 ns/op
+BenchmarkDatetime-4        1000000        1092 ns/op
+BenchmarkUsername-4        1591448         746 ns/op
+BenchmarkHostname-4        1537056         752 ns/op
+BenchmarkDirectories-4      106248       11328 ns/op
+BenchmarkRepoStatus-4          144     7536442 ns/op
+BenchmarkCallPlugins-4         308     3822583 ns/op
+BenchmarkRootSymbol-4      1000000        1048 ns/op
 ```
