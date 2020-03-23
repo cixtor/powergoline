@@ -415,7 +415,8 @@ func (p *Powergoline) CallPlugins() {
 		if !bucket[i].Print {
 			continue
 		}
-		p.AddSegment(bucket[i].Text, bucket[i].Fore, bucket[i].Back)
+
+		p.AddSegment(u0020+bucket[i].Text+u0020, bucket[i].Fore, bucket[i].Back)
 		p.AddSegment(uE0B0, p.config.Plugins[i].Bg, "automatic")
 	}
 }
@@ -438,7 +439,7 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	}
 
 	out <- Segment{
-		Text:  u0020 + string(output) + u0020,
+		Text:  string(output),
 		Fore:  addon.Fg,
 		Back:  addon.Bg,
 		Index: index,
