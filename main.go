@@ -31,7 +31,12 @@ const program = "powergoline"
 // filename is the name of the configuration file.
 const filename = ".powergoline.json"
 
+// debug determine if the program will print execution statistics.
+var debug bool
+
 func main() {
+	flag.BoolVar(&debug, "debug", false, "Print execution statistics")
+
 	flag.Parse()
 
 	config, err := NewConfig(os.Getenv("HOME") + "/" + filename)

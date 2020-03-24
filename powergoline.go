@@ -59,11 +59,12 @@ type Powergoline struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	Text  string
-	Fore  string
-	Back  string
-	Index int
-	Print bool
+	Text    string
+	Fore    string
+	Back    string
+	Index   int
+	Print   bool
+	Latency time.Duration
 }
 
 // RepoStatus holds the information of the current state of a repository, this
@@ -412,6 +413,14 @@ func (p *Powergoline) CallPlugins() {
 	}
 
 	for i := 0; i < total; i++ {
+		if debug {
+			fmt.Printf(
+				"%s took %s\n",
+				p.config.Plugins[i].Command,
+				bucket[i].Latency,
+			)
+		}
+
 		if !bucket[i].Print {
 			continue
 		}
@@ -426,10 +435,12 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	sem <- true /* block */
 	defer func() { <-sem }()
 
+	start := time.Now()
 	output, err := call(addon.Command)
+	runtime := time.Since(start)
 
 	if err == errEmptyOutput {
-		out <- Segment{Index: index}
+		out <- Segment{Index: index, Latency: runtime}
 		return
 	}
 
@@ -439,11 +450,12 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	}
 
 	out <- Segment{
-		Text:  string(output),
-		Fore:  addon.Fg,
-		Back:  addon.Bg,
-		Index: index,
-		Print: true,
+		Text:    string(output),
+		Fore:    addon.Fg,
+		Back:    addon.Bg,
+		Index:   index,
+		Print:   true,
+		Latency: runtime,
 	}
 }
 
