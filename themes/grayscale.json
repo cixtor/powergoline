@@ -23,6 +23,7 @@
 		"background": "124"
 	},
 	"currentdir": {
+		"enabled": true,
 		"foreground": "255",
 		"background": "244"
 	},

@@ -243,6 +243,10 @@ func (p *Powergoline) HomeDirectory() {
 
 // Directories returns the full path of the current directory.
 func (p *Powergoline) Directories() {
+	if !p.config.CurrentDir.On {
+		return
+	}
+
 	homedir := os.Getenv("HOME")
 	currdir := os.Getenv("PWD")
 	shortdir := strings.Replace(currdir, homedir, "", 1)

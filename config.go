@@ -42,7 +42,7 @@ type RepositoryConfig struct {
 // CurrentDirectory is the configuration for the current working directory.
 type CurrentDirectory struct {
 	Size int `json:"size"`
-	ColorsConfig
+	SimpleConfig
 }
 
 // Plugin adds support for execution of external commands.

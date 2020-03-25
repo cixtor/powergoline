@@ -24,6 +24,7 @@
 	},
 	"currentdir": {
 		"size": 4,
+		"enabled": true,
 		"foreground": "081",
 		"background": "024"
 	},
