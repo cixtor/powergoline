@@ -47,8 +47,27 @@ type CurrentDirectory struct {
 
 // Plugin adds support for execution of external commands.
 type Plugin struct {
-	Command string `json:"command"`
+	Command Command `json:"command"`
 	ColorsConfig
+}
+
+// Command represents a Unix command with optional arguments.
+type Command []string
+
+// Name returns the first string in the Command chain, if available.
+func (c Command) Name() string {
+	if len(c) == 0 {
+		return ""
+	}
+	return c[0]
+}
+
+// Args returns the second and subsequent strings in the Command chain.
+func (c Command) Args() []string {
+	if len(c) <= 1 {
+		return nil
+	}
+	return c[1:]
 }
 
 // StatusCode holds the settings for the program exit codes.

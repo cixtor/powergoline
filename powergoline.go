@@ -440,7 +440,7 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	defer func() { <-sem }()
 
 	start := time.Now()
-	output, err := call(addon.Command)
+	output, err := call(addon.Command.Name(), addon.Command.Args()...)
 	runtime := time.Since(start)
 
 	if err == errEmptyOutput {
