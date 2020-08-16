@@ -1,126 +1,81 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
+	"strings"
 )
 
-// Config holds the CLI prompt settings.
+// Config represents all the available program options.
 type Config struct {
-	Datetime   SimpleConfig     `json:"datetime"`
-	Username   SimpleConfig     `json:"username"`
-	Hostname   SimpleConfig     `json:"hostname"`
-	HomeDir    ColorsConfig     `json:"homedir"`
-	RdonlyDir  ColorsConfig     `json:"rdonlydir"`
-	CurrentDir CurrentDirectory `json:"currentdir"`
-	Repository RepositoryConfig `json:"repository"`
-	Plugins    []Plugin         `json:"plugins"`
-	Symbol     StatusSymbol     `json:"symbol"`
-	Status     StatusCode       `json:"status"`
+	Debug            bool
+	TimeOn           bool
+	TimeFg           int
+	TimeBg           int
+	TimeFmt          string
+	UserOn           bool
+	UserFg           int
+	UserBg           int
+	HostOn           bool
+	HostFg           int
+	HostBg           int
+	HomeFg           int
+	HomeBg           int
+	RodirFg          int
+	RodirBg          int
+	CwdN             int
+	CwdOn            bool
+	CwdFg            int
+	CwdBg            int
+	RepoOn           bool
+	RepoFg           int
+	RepoBg           int
+	RepoExclude      FlagStringArray
+	RepoInclude      FlagStringArray
+	Plugins          FlagPluginArray
+	SymbolRoot       string
+	SymbolUser       string
+	StatusFg         int
+	StatusCode       int
+	StatusSuccess    int
+	StatusError      int
+	StatusMisuse     int
+	StatusCantExec   int
+	StatusNotFound   int
+	StatusInvalid    int
+	StatusErrSignal  int
+	StatusTerminated int
+	StatusOutofrange int
 }
 
-// ColorsConfig is the foreground and background colors.
-type ColorsConfig struct {
-	Fg string `json:"foreground"`
-	Bg string `json:"background"`
+type FlagStringArray []string
+
+func (v FlagStringArray) Set(s string) error {
+	return nil
 }
 
-// SimpleConfig is a generic text and color object.
-type SimpleConfig struct {
-	On bool `json:"enabled"`
-	ColorsConfig
+func (v FlagStringArray) String() string {
+	return ""
 }
 
-type RepositoryConfig struct {
-	SimpleConfig
-	Exclude []string `json:"exclude,omitempty"`
-	Include []string `json:"include,omitempty"`
+type FlagPluginArray []Plugin
+
+func (v *FlagPluginArray) Set(s string) error {
+	if strings.TrimSpace(s) == "" {
+		return fmt.Errorf("invalid plugin")
+	}
+	pieces := strings.Split(s, "\x20")
+	*v = append(*v, Plugin{
+		Name: pieces[0],
+		Args: pieces[1:],
+	})
+	return nil
 }
 
-// CurrentDirectory is the configuration for the current working directory.
-type CurrentDirectory struct {
-	Size int `json:"size"`
-	SimpleConfig
+func (v FlagPluginArray) String() string {
+	return ""
 }
 
-// Plugin adds support for execution of external commands.
 type Plugin struct {
-	Command Command `json:"command"`
-	ColorsConfig
-}
-
-// Command represents a Unix command with optional arguments.
-type Command []string
-
-// Name returns the first string in the Command chain, if available.
-func (c Command) Name() string {
-	if len(c) == 0 {
-		return ""
-	}
-	return c[0]
-}
-
-// Args returns the second and subsequent strings in the Command chain.
-func (c Command) Args() []string {
-	if len(c) <= 1 {
-		return nil
-	}
-	return c[1:]
-}
-
-// StatusCode holds the settings for the program exit codes.
-type StatusCode struct {
-	Symbol      string `json:"symbol"`
-	Success     string `json:"success"`
-	Failure     string `json:"failure"`
-	Misuse      string `json:"misuse"`
-	Permission  string `json:"permission"`
-	NotFound    string `json:"not_found"`
-	InvalidExit string `json:"invalid_exit"`
-	Terminated  string `json:"terminated"`
-}
-
-// StatusSymbol holds the indicator for each user.
-type StatusSymbol struct {
-	Regular   string `json:"regular"`
-	SuperUser string `json:"super_user"`
-}
-
-// NewConfig creates a new instance of Config.
-//
-// The function attempts to read and decode`$HOME/.powergoline.json`
-//
-// If the configuration file does not exist, then it returns the default values
-// and attempts to write the default values into the aforementioned file for
-// future reads. If the file exists but contains malformed data, it returns the
-// default values and displays a warning to explain the file load issues.
-func NewConfig(filename string) (Config, error) {
-	var config Config
-
-	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		config = defaultConfig()
-		data, _ := json.MarshalIndent(config, "", "\t")
-		_ = ioutil.WriteFile(filename, data, 0644)
-		return config, nil
-	}
-
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return defaultConfig(), fmt.Errorf(program+"; open config %s", err)
-	}
-
-	defer func() {
-		if err := file.Close(); err != nil {
-			fmt.Println(program+"; exit config %s", err)
-		}
-	}()
-
-	if err := json.NewDecoder(file).Decode(&config); err != nil {
-		return defaultConfig(), fmt.Errorf(program+"; read config %s", err)
-	}
-
-	return config, nil
+	Name string
+	Args []string
 }

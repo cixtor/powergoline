@@ -15,6 +15,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+// auto is an invalid xterm color code used to represent automatic selection of
+// the color, either foreground or background, of the previous segment in the
+// list to colorize the next segment.
+var auto int = 0x9999
+
 // u000a is Unicode for `\n` (new line).
 const u000a = "\u000a"
 
@@ -59,12 +64,12 @@ type Powergoline struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	Text    string
-	Fore    string
-	Back    string
+	S       string
+	Fg      int
+	Bg      int
 	Index   int
 	Print   bool
-	Latency time.Duration
+	Runtime time.Duration
 }
 
 // RepoStatus holds the information of the current state of a repository, this
@@ -86,17 +91,17 @@ func NewPowergoline(config Config) *Powergoline {
 	return &Powergoline{config: config}
 }
 
+func colorize(n int) string {
+	return fmt.Sprintf("%03d", n)
+}
+
 // AddSegment inserts a new block in the CLI prompt output.
-func (p *Powergoline) AddSegment(text string, fore string, back string) {
-	p.pieces = append(p.pieces, Segment{
-		Text: text,
-		Fore: fore,
-		Back: back,
-	})
+func (p *Powergoline) AddSegment(s string, fg int, bg int) {
+	p.pieces = append(p.pieces, Segment{S: s, Fg: fg, Bg: bg})
 }
 
 // Render sends all the segments to the standard output.
-func (p Powergoline) Render(status string) int {
+func (p Powergoline) Render() int {
 	p.TermTitle()
 	p.Datetime()
 	p.Username()
@@ -104,7 +109,7 @@ func (p Powergoline) Render(status string) int {
 	p.Directories()
 	p.RepoStatus()
 	p.CallPlugins()
-	p.RootSymbol(status)
+	p.RootSymbol()
 
 	p.PrintSegments(os.Stdout)
 
@@ -112,25 +117,28 @@ func (p Powergoline) Render(status string) int {
 }
 
 // Print sends a segment to the standard output.
-func (p Powergoline) Print(w io.Writer, text string, fore string, back string) {
+func (p Powergoline) Print(w io.Writer, s string, fg int, bg int) {
 	var color string
 
+	fore := colorize(fg)
+	back := colorize(bg)
+
 	// Add the foreground and background colors.
-	if fore != "" && back != "" {
+	if fg > -1 && bg > -1 {
 		color += "38;5;" + fore + ";" + "48;5;" + back
-	} else if fore != "" {
+	} else if fg > -1 {
 		color += "38;5;" + fore
-	} else if back != "" {
+	} else if bg > -1 {
 		color += "48;5;" + back
 	}
 
 	// Draw the color sequences if necessary.
 	if len(color) > 0 {
-		fmt.Fprint(w, "\\[\\e["+color+"m\\]"+text+"\\[\\e[0m\\]")
+		fmt.Fprint(w, "\\[\\e["+color+"m\\]"+s+"\\[\\e[0m\\]")
 		return
 	}
 
-	fmt.Fprint(w, text)
+	fmt.Fprint(w, s)
 }
 
 // PrintSegments prints all the segments as the command prompt.
@@ -143,16 +151,16 @@ func (p Powergoline) PrintSegments(w io.Writer) {
 	for key := 0; key < ttlsegms; key++ {
 		curr = p.pieces[key]
 
-		if curr.Back == "automatic" && len(p.pieces) > key+1 {
+		if curr.Bg == auto && len(p.pieces) > key+1 {
 			next = p.pieces[key+1]
-			curr.Back = next.Back
+			curr.Bg = next.Bg
 		}
 
 		// prevent arbitrary code execution in subshell expressions.
-		curr.Text = strings.Replace(curr.Text, "$", "\\$", -1)
-		curr.Text = strings.Replace(curr.Text, "`", "\\`", -1)
+		curr.S = strings.Replace(curr.S, "$", "\\$", -1)
+		curr.S = strings.Replace(curr.S, "`", "\\`", -1)
 
-		p.Print(w, curr.Text, curr.Fore, curr.Back)
+		p.Print(w, curr.S, curr.Fg, curr.Bg)
 	}
 
 	fmt.Fprint(w, u0020+u000a)
@@ -170,60 +178,60 @@ func (p Powergoline) IsRdonlyDir(folder string) bool {
 
 // TermTitle defines the template for the terminal title.
 func (p *Powergoline) TermTitle() {
-	p.AddSegment("\\[\\e]0;\\u@\\h: \\w\\a\\]", "", "")
+	p.AddSegment("\\[\\e]0;\\u@\\h: \\w\\a\\]", -1, -1)
 }
 
 // Datetime defines a segment with the current date and time.
 func (p *Powergoline) Datetime() {
-	if !p.config.Datetime.On {
+	if !p.config.TimeOn {
 		return
 	}
 
 	p.AddSegment(
 		u0020+time.Now().Format("15:04:05")+u0020,
-		p.config.Datetime.Fg,
-		p.config.Datetime.Bg,
+		p.config.TimeFg,
+		p.config.TimeBg,
 	)
 	p.AddSegment(
 		uE0B0,
-		p.config.Datetime.Bg,
-		"automatic",
+		p.config.TimeBg,
+		auto,
 	)
 }
 
 // Username defines a segment with the name of the current account.
 func (p *Powergoline) Username() {
-	if !p.config.Username.On {
+	if !p.config.UserOn {
 		return
 	}
 
 	p.AddSegment(
 		u0020+"\\u"+u0020,
-		p.config.Username.Fg,
-		p.config.Username.Bg,
+		p.config.UserFg,
+		p.config.UserBg,
 	)
 	p.AddSegment(
 		uE0B0,
-		p.config.Username.Bg,
-		"automatic",
+		p.config.UserBg,
+		auto,
 	)
 }
 
 // Hostname defines a segment with the name of this system.
 func (p *Powergoline) Hostname() {
-	if !p.config.Hostname.On {
+	if !p.config.HostOn {
 		return
 	}
 
 	p.AddSegment(
 		u0020+"\\h"+u0020,
-		p.config.Hostname.Fg,
-		p.config.Hostname.Bg,
+		p.config.HostFg,
+		p.config.HostBg,
 	)
 	p.AddSegment(
 		uE0B0,
-		p.config.Hostname.Bg,
-		"automatic",
+		p.config.HostBg,
+		auto,
 	)
 }
 
@@ -231,19 +239,19 @@ func (p *Powergoline) Hostname() {
 func (p *Powergoline) HomeDirectory() {
 	p.AddSegment(
 		u0020+"~"+u0020,
-		p.config.HomeDir.Fg,
-		p.config.HomeDir.Bg,
+		p.config.HomeFg,
+		p.config.HomeBg,
 	)
 	p.AddSegment(
 		uE0B0,
-		p.config.HomeDir.Bg,
-		"automatic",
+		p.config.HomeBg,
+		auto,
 	)
 }
 
 // Directories returns the full path of the current directory.
 func (p *Powergoline) Directories() {
-	if !p.config.CurrentDir.On {
+	if !p.config.CwdOn {
 		return
 	}
 
@@ -253,7 +261,7 @@ func (p *Powergoline) Directories() {
 	cleandir := strings.Trim(shortdir, "/")
 
 	// Draw the sequence of folders of the current path.
-	maxsegms := p.config.CurrentDir.Size
+	maxsegms := p.config.CwdN
 	dirparts := strings.Split(cleandir, "/")
 	ttlparts := len(dirparts)
 	lastsegm := (ttlparts - 1)
@@ -286,21 +294,21 @@ func (p *Powergoline) Directories() {
 
 		p.AddSegment(
 			u0020+folder+u0020,
-			p.config.CurrentDir.Fg,
-			p.config.CurrentDir.Bg,
+			p.config.CwdFg,
+			p.config.CwdBg,
 		)
 
 		if key == lastsegm {
 			p.AddSegment(
 				uE0B0,
-				p.config.CurrentDir.Bg,
-				"automatic",
+				p.config.CwdBg,
+				auto,
 			)
 		} else {
 			p.AddSegment(
 				uE0B1,
-				p.config.CurrentDir.Fg,
-				p.config.CurrentDir.Bg,
+				p.config.CwdFg,
+				p.config.CwdBg,
 			)
 		}
 	}
@@ -309,27 +317,27 @@ func (p *Powergoline) Directories() {
 	if p.IsRdonlyDir(currdir) {
 		p.AddSegment(
 			u0020+uE0A2+u0020,
-			p.config.RdonlyDir.Fg,
-			p.config.RdonlyDir.Bg,
+			p.config.RodirFg,
+			p.config.RodirBg,
 		)
 
 		p.AddSegment(
 			uE0B0,
-			p.config.RdonlyDir.Bg,
-			"automatic",
+			p.config.RodirBg,
+			auto,
 		)
 	}
 }
 
 // RepoStatusExclude checks if the current folder excludes repository status.
 func (p *Powergoline) RepoStatusExclude() bool {
-	if !p.config.Repository.On {
+	if !p.config.RepoOn {
 		return true
 	}
 
 	currdir := os.Getenv("PWD")
 
-	for _, folder := range p.config.Repository.Exclude {
+	for _, folder := range p.config.RepoExclude {
 		if currdir == folder {
 			return true
 		}
@@ -389,13 +397,13 @@ func (p *Powergoline) RepoStatus() {
 
 	p.AddSegment(
 		branch,
-		p.config.Repository.Fg,
-		p.config.Repository.Bg,
+		p.config.RepoFg,
+		p.config.RepoBg,
 	)
 	p.AddSegment(
 		uE0B0,
-		p.config.Repository.Bg,
-		"automatic",
+		p.config.RepoBg,
+		auto,
 	)
 }
 
@@ -417,11 +425,11 @@ func (p *Powergoline) CallPlugins() {
 	}
 
 	for i := 0; i < total; i++ {
-		if debug {
+		if p.config.Debug {
 			fmt.Printf(
 				"%s took %s\n",
-				p.config.Plugins[i].Command,
-				bucket[i].Latency,
+				p.config.Plugins[i].Name,
+				bucket[i].Runtime,
 			)
 		}
 
@@ -429,8 +437,8 @@ func (p *Powergoline) CallPlugins() {
 			continue
 		}
 
-		p.AddSegment(u0020+bucket[i].Text+u0020, bucket[i].Fore, bucket[i].Back)
-		p.AddSegment(uE0B0, p.config.Plugins[i].Bg, "automatic")
+		p.AddSegment(u0020+bucket[i].S+u0020, bucket[i].Fg, bucket[i].Bg)
+		p.AddSegment(uE0B0, auto, auto)
 	}
 }
 
@@ -440,11 +448,11 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	defer func() { <-sem }()
 
 	start := time.Now()
-	output, err := call(addon.Command.Name(), addon.Command.Args()...)
+	output, err := call(addon.Name, addon.Args...)
 	runtime := time.Since(start)
 
 	if err == errEmptyOutput {
-		out <- Segment{Index: index, Latency: runtime}
+		out <- Segment{Index: index, Runtime: runtime}
 		return
 	}
 
@@ -454,12 +462,12 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	}
 
 	out <- Segment{
-		Text:    string(output),
-		Fore:    addon.Fg,
-		Back:    addon.Bg,
+		S:       string(output),
+		Fg:      auto,
+		Bg:      auto,
 		Index:   index,
 		Print:   true,
-		Latency: runtime,
+		Runtime: runtime,
 	}
 }
 
@@ -476,35 +484,39 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 //   128+n - Fatal error signal where "n" is the PID.
 //   130   - Script terminated by Control-C.
 //   255*  - Exit status out of range.
-func (p *Powergoline) RootSymbol(status string) {
+func (p *Powergoline) RootSymbol() {
+	var color int
 	var symbol string
-	var color string
+	status := p.config.StatusCode
 
 	if os.Getuid() == 0 {
-		symbol = p.config.Symbol.SuperUser
+		symbol = p.config.SymbolRoot
 	} else {
-		symbol = p.config.Symbol.Regular
+		symbol = p.config.SymbolUser
 	}
 
-	switch status {
-	case "0":
-		color = p.config.Status.Success
-	case "1":
-		color = p.config.Status.Failure
-	case "126":
-		color = p.config.Status.Permission
-	case "127":
-		color = p.config.Status.NotFound
-	case "128":
-		color = p.config.Status.InvalidExit
-	case "130":
-		color = p.config.Status.Terminated
-	default:
-		color = p.config.Status.Misuse
+	if status == 0 {
+		color = p.config.StatusSuccess
+	} else if status == 1 {
+		color = p.config.StatusError
+	} else if status == 2 {
+		color = p.config.StatusMisuse
+	} else if status == 126 {
+		color = p.config.StatusCantExec
+	} else if status == 127 {
+		color = p.config.StatusNotFound
+	} else if status == 128 {
+		color = p.config.StatusInvalid
+	} else if status > 128 && status != 130 && status < 255 {
+		color = p.config.StatusErrSignal
+	} else if status == 130 {
+		color = p.config.StatusTerminated
+	} else {
+		color = p.config.StatusOutofrange
 	}
 
-	p.AddSegment(u0020+symbol+u0020, p.config.Status.Symbol, color)
-	p.AddSegment(uE0B0, color, "")
+	p.AddSegment(u0020+symbol+u0020, p.config.StatusFg, color)
+	p.AddSegment(uE0B0, color, -1)
 }
 
 // runcmd executes an external command and returns the output.
