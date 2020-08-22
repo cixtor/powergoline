@@ -175,32 +175,31 @@ func TestStatusGitNoOrigin(t *testing.T) {
 	})
 }
 
-func compareRootSymbol(t *testing.T, status string, color string) {
+func compareRootSymbol(t *testing.T, status int, color string) {
 	var buf bytes.Buffer
 
-	a := []byte("\\[\\e[48;5;")
+	a := []byte("\\[\\e[38;5;000;48;5;")
 	b := []byte("m\\] r \\[\\e[0m\\]\\[\\e[38;5;")
 	c := []byte("m\\]\ue0b0\\[\\e[0m\\] \n")
 
 	p := NewPowergoline(Config{
-		Symbol: StatusSymbol{
-			Regular:   "r",
-			SuperUser: "s",
-		},
-		Status: StatusCode{
-			Success:     "c000", // 0 - Operation success and generic status code.
-			Failure:     "c111", // 1 - Catchall for general errors and failures.
-			Misuse:      "c222", // 2 - Misuse of shell builtins, missing command or permission problem.
-			Permission:  "c126", // 126 - Cannot execute command, permission problem, or not an executable.
-			NotFound:    "c127", // 127 - Command not found, illegal path, or possible typo.
-			InvalidExit: "c128", // 128 - Invalid argument to exit, only use range 0-255.
-			Terminated:  "c130", // 130 - Script terminated by Control-C.
-		},
+		SymbolUser:       "r",
+		SymbolRoot:       "s",
+		StatusCode:       status,
+		StatusSuccess:    0,
+		StatusError:      111,
+		StatusMisuse:     222,
+		StatusCantExec:   126,
+		StatusNotFound:   127,
+		StatusInvalid:    128,
+		StatusErrSignal:  333,
+		StatusTerminated: 130,
+		StatusOutofrange: 999,
 	})
 
 	var expected []byte
 
-	p.RootSymbol(status)
+	p.RootSymbol()
 	p.PrintSegments(&buf)
 
 	expected = append(expected, a...)
@@ -214,37 +213,40 @@ func compareRootSymbol(t *testing.T, status string, color string) {
 	}
 }
 
-func TestRootSymbol000(t *testing.T) { compareRootSymbol(t, "0", "c000") }
+func TestRootSymbol000(t *testing.T) { compareRootSymbol(t, 0, "000") }
 
-func TestRootSymbol111(t *testing.T) { compareRootSymbol(t, "1", "c111") }
+func TestRootSymbol111(t *testing.T) { compareRootSymbol(t, 1, "111") }
 
-func TestRootSymbol222(t *testing.T) { compareRootSymbol(t, "2", "c222") }
+func TestRootSymbol222(t *testing.T) { compareRootSymbol(t, 2, "222") }
 
-func TestRootSymbol126(t *testing.T) { compareRootSymbol(t, "126", "c126") }
+func TestRootSymbol126(t *testing.T) { compareRootSymbol(t, 126, "126") }
 
-func TestRootSymbol127(t *testing.T) { compareRootSymbol(t, "127", "c127") }
+func TestRootSymbol127(t *testing.T) { compareRootSymbol(t, 127, "127") }
 
-func TestRootSymbol128(t *testing.T) { compareRootSymbol(t, "128", "c128") }
+func TestRootSymbol128(t *testing.T) { compareRootSymbol(t, 128, "128") }
 
-func TestRootSymbol129(t *testing.T) { compareRootSymbol(t, "129", "c222") }
+func TestRootSymbol129(t *testing.T) { compareRootSymbol(t, 129, "333") }
 
-func TestRootSymbol130(t *testing.T) { compareRootSymbol(t, "130", "c130") }
+func TestRootSymbol130(t *testing.T) { compareRootSymbol(t, 130, "130") }
 
-func TestRootSymbol256(t *testing.T) { compareRootSymbol(t, "256", "c222") }
+func TestRootSymbol133(t *testing.T) { compareRootSymbol(t, 133, "333") }
 
-func TestRootSymbolABC(t *testing.T) { compareRootSymbol(t, "abc", "c222") }
+func TestRootSymbol256(t *testing.T) { compareRootSymbol(t, 256, "999") }
+
+func TestRootSymbolABC(t *testing.T) { compareRootSymbol(t, 300, "999") }
 
 func BenchmarkAll(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
 		p := NewPowergoline(Config{
-			Datetime:   SimpleConfig{On: true},
-			Username:   SimpleConfig{On: true},
-			Hostname:   SimpleConfig{On: true},
-			CurrentDir: CurrentDirectory{Size: 3},
-			Repository: RepositoryConfig{SimpleConfig: SimpleConfig{On: true}},
-			Plugins:    []Plugin{{Command: "echo"}},
+			TimeOn:     true,
+			UserOn:     true,
+			HostOn:     true,
+			CwdN:       3,
+			RepoOn:     true,
+			Plugins:    []Plugin{{Name: "echo"}},
+			StatusCode: 0,
 		})
 
 		p.TermTitle()
@@ -254,7 +256,7 @@ func BenchmarkAll(b *testing.B) {
 		p.Directories()
 		p.RepoStatus()
 		p.CallPlugins()
-		p.RootSymbol("0")
+		p.RootSymbol()
 
 		p.PrintSegments(&buf)
 	}
@@ -274,7 +276,7 @@ func BenchmarkDatetime(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{Datetime: SimpleConfig{On: true}})
+		p := NewPowergoline(Config{TimeOn: true})
 		p.Datetime()
 		p.PrintSegments(&buf)
 	}
@@ -284,7 +286,7 @@ func BenchmarkUsername(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{Username: SimpleConfig{On: true}})
+		p := NewPowergoline(Config{UserOn: true})
 		p.Username()
 		p.PrintSegments(&buf)
 	}
@@ -294,7 +296,7 @@ func BenchmarkHostname(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{Hostname: SimpleConfig{On: true}})
+		p := NewPowergoline(Config{HostOn: true})
 		p.Hostname()
 		p.PrintSegments(&buf)
 	}
@@ -304,7 +306,7 @@ func BenchmarkDirectories(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{CurrentDir: CurrentDirectory{Size: 3}})
+		p := NewPowergoline(Config{CwdN: 3})
 		p.Directories()
 		p.PrintSegments(&buf)
 	}
@@ -314,13 +316,7 @@ func BenchmarkRepoStatus(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{
-			Repository: RepositoryConfig{
-				SimpleConfig: SimpleConfig{
-					On: true,
-				},
-			},
-		})
+		p := NewPowergoline(Config{RepoOn: true})
 		p.RepoStatus()
 		p.PrintSegments(&buf)
 	}
@@ -332,7 +328,7 @@ func BenchmarkCallPlugins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		p := NewPowergoline(Config{
 			Plugins: []Plugin{
-				{Command: "echo"},
+				{Name: "echo"},
 			},
 		})
 		p.CallPlugins()
@@ -344,8 +340,8 @@ func BenchmarkRootSymbol(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{})
-		p.RootSymbol("0")
+		p := NewPowergoline(Config{StatusCode: 0})
+		p.RootSymbol()
 		p.PrintSegments(&buf)
 	}
 }
