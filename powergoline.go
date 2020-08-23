@@ -144,16 +144,15 @@ func (p Powergoline) Print(w io.Writer, s string, fg int, bg int) {
 // PrintSegments prints all the segments as the command prompt.
 func (p Powergoline) PrintSegments(w io.Writer) {
 	var curr Segment
-	var next Segment
 
 	ttlsegms := len(p.pieces)
 
 	for key := 0; key < ttlsegms; key++ {
 		curr = p.pieces[key]
 
+		// Use the next segment's background color for the current segment.
 		if curr.Bg == auto && len(p.pieces) > key+1 {
-			next = p.pieces[key+1]
-			curr.Bg = next.Bg
+			curr.Bg = p.pieces[key+1].Bg
 		}
 
 		// prevent arbitrary code execution in subshell expressions.
@@ -187,16 +186,8 @@ func (p *Powergoline) Datetime() {
 		return
 	}
 
-	p.AddSegment(
-		u0020+time.Now().Format("15:04:05")+u0020,
-		p.config.TimeFg,
-		p.config.TimeBg,
-	)
-	p.AddSegment(
-		uE0B0,
-		p.config.TimeBg,
-		auto,
-	)
+	p.AddSegment(u0020+time.Now().Format(p.config.TimeFmt)+u0020, p.config.TimeFg, p.config.TimeBg)
+	p.AddSegment(uE0B0, p.config.TimeBg, auto)
 }
 
 // Username defines a segment with the name of the current account.
@@ -205,16 +196,8 @@ func (p *Powergoline) Username() {
 		return
 	}
 
-	p.AddSegment(
-		u0020+"\\u"+u0020,
-		p.config.UserFg,
-		p.config.UserBg,
-	)
-	p.AddSegment(
-		uE0B0,
-		p.config.UserBg,
-		auto,
-	)
+	p.AddSegment(u0020+"\\u"+u0020, p.config.UserFg, p.config.UserBg)
+	p.AddSegment(uE0B0, p.config.UserBg, auto)
 }
 
 // Hostname defines a segment with the name of this system.
@@ -223,30 +206,14 @@ func (p *Powergoline) Hostname() {
 		return
 	}
 
-	p.AddSegment(
-		u0020+"\\h"+u0020,
-		p.config.HostFg,
-		p.config.HostBg,
-	)
-	p.AddSegment(
-		uE0B0,
-		p.config.HostBg,
-		auto,
-	)
+	p.AddSegment(u0020+"\\h"+u0020, p.config.HostFg, p.config.HostBg)
+	p.AddSegment(uE0B0, p.config.HostBg, auto)
 }
 
 // HomeDirectory defines a segment with current directory path.
 func (p *Powergoline) HomeDirectory() {
-	p.AddSegment(
-		u0020+"~"+u0020,
-		p.config.HomeFg,
-		p.config.HomeBg,
-	)
-	p.AddSegment(
-		uE0B0,
-		p.config.HomeBg,
-		auto,
-	)
+	p.AddSegment(u0020+"~"+u0020, p.config.HomeFg, p.config.HomeBg)
+	p.AddSegment(uE0B0, p.config.HomeBg, auto)
 }
 
 // Directories returns the full path of the current directory.
@@ -292,40 +259,19 @@ func (p *Powergoline) Directories() {
 			continue
 		}
 
-		p.AddSegment(
-			u0020+folder+u0020,
-			p.config.CwdFg,
-			p.config.CwdBg,
-		)
+		p.AddSegment(u0020+folder+u0020, p.config.CwdFg, p.config.CwdBg)
 
 		if key == lastsegm {
-			p.AddSegment(
-				uE0B0,
-				p.config.CwdBg,
-				auto,
-			)
+			p.AddSegment(uE0B0, p.config.CwdBg, auto)
 		} else {
-			p.AddSegment(
-				uE0B1,
-				p.config.CwdFg,
-				p.config.CwdBg,
-			)
+			p.AddSegment(uE0B1, p.config.CwdFg, p.config.CwdBg)
 		}
 	}
 
 	// Draw lock if current directory is read-only.
 	if p.IsRdonlyDir(currdir) {
-		p.AddSegment(
-			u0020+uE0A2+u0020,
-			p.config.RodirFg,
-			p.config.RodirBg,
-		)
-
-		p.AddSegment(
-			uE0B0,
-			p.config.RodirBg,
-			auto,
-		)
+		p.AddSegment(u0020+uE0A2+u0020, p.config.RodirFg, p.config.RodirBg)
+		p.AddSegment(uE0B0, p.config.RodirBg, auto)
 	}
 }
 
@@ -395,16 +341,8 @@ func (p *Powergoline) RepoStatus() {
 		branch += fmt.Sprintf("-%d ", status.Deleted)
 	}
 
-	p.AddSegment(
-		branch,
-		p.config.RepoFg,
-		p.config.RepoBg,
-	)
-	p.AddSegment(
-		uE0B0,
-		p.config.RepoBg,
-		auto,
-	)
+	p.AddSegment(branch, p.config.RepoFg, p.config.RepoBg)
+	p.AddSegment(uE0B0, p.config.RepoBg, auto)
 }
 
 // CallPlugins runs all the user defined plugins.
