@@ -101,7 +101,7 @@ func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 }
 
 // Render sends all the segments to the standard output.
-func (p Powergoline) Render() int {
+func (p Powergoline) Render(w io.Writer) int {
 	p.TermTitle()
 	p.Datetime()
 	p.Username()
@@ -111,13 +111,16 @@ func (p Powergoline) Render() int {
 	p.CallPlugins()
 	p.RootSymbol()
 
-	p.PrintSegments(os.Stdout)
+	if _, err := p.PrintSegments(w); err != nil {
+		fmt.Println(err)
+		return 1
+	}
 
 	return 0
 }
 
 // Print sends a segment to the standard output.
-func (p Powergoline) Print(w io.Writer, s string, fg int, bg int) {
+func (p Powergoline) Print(w io.Writer, s string, fg int, bg int) (int, error) {
 	var color string
 
 	fore := colorize(fg)
@@ -134,15 +137,14 @@ func (p Powergoline) Print(w io.Writer, s string, fg int, bg int) {
 
 	// Draw the color sequences if necessary.
 	if len(color) > 0 {
-		fmt.Fprint(w, "\\[\\e["+color+"m\\]"+s+"\\[\\e[0m\\]")
-		return
+		return fmt.Fprint(w, "\\[\\e["+color+"m\\]"+s+"\\[\\e[0m\\]")
 	}
 
-	fmt.Fprint(w, s)
+	return fmt.Fprint(w, s)
 }
 
 // PrintSegments prints all the segments as the command prompt.
-func (p Powergoline) PrintSegments(w io.Writer) {
+func (p Powergoline) PrintSegments(w io.Writer) (int, error) {
 	var curr Segment
 
 	ttlsegms := len(p.pieces)
@@ -159,10 +161,12 @@ func (p Powergoline) PrintSegments(w io.Writer) {
 		curr.S = strings.Replace(curr.S, "$", "\\$", -1)
 		curr.S = strings.Replace(curr.S, "`", "\\`", -1)
 
-		p.Print(w, curr.S, curr.Fg, curr.Bg)
+		if _, err := p.Print(w, curr.S, curr.Fg, curr.Bg); err != nil {
+			return 0, err
+		}
 	}
 
-	fmt.Fprint(w, u0020+u000a)
+	return fmt.Fprint(w, u0020+u000a)
 }
 
 // IsWritable checks if the process can write in a directory.

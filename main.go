@@ -72,5 +72,5 @@ func main() {
 
 	flag.Parse()
 
-	os.Exit(NewPowergoline(config).Render())
+	os.Exit(NewPowergoline(config).Render(os.Stdout))
 }
