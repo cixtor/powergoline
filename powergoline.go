@@ -68,7 +68,6 @@ type Segment struct {
 	Fg      int
 	Bg      int
 	Index   int
-	Print   bool
 	Runtime time.Duration
 }
 
@@ -375,7 +374,7 @@ func (p *Powergoline) CallPlugins() {
 			)
 		}
 
-		if !bucket[i].Print {
+		if bucket[i].S == "" {
 			continue
 		}
 
@@ -393,7 +392,7 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	output, err := call(addon.Name, addon.Args...)
 	runtime := time.Since(start)
 
-	if err == errEmptyOutput {
+	if errors.Is(err, errEmptyOutput) {
 		out <- Segment{Index: index, Runtime: runtime}
 		return
 	}
@@ -405,10 +404,9 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 
 	out <- Segment{
 		S:       string(output),
-		Fg:      auto,
+		Fg:      p.config.CwdFg,
 		Bg:      auto,
 		Index:   index,
-		Print:   true,
 		Runtime: runtime,
 	}
 }
