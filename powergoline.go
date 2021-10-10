@@ -207,11 +207,7 @@ func (p *Powergoline) Hostname() {
 	p.AddSegment(uE0B0, p.config.HostBg, auto)
 }
 
-// HomeDirectory defines a segment with current directory path.
-func (p *Powergoline) HomeDirectory() {
-	p.AddSegment(u0020+"~"+u0020, p.config.HomeFg, p.config.HomeBg)
-	p.AddSegment(uE0B0, p.config.HomeBg, auto)
-}
+var sep string = "/"
 
 // Directories returns the full path of the current directory.
 func (p *Powergoline) Directories() {
@@ -220,55 +216,54 @@ func (p *Powergoline) Directories() {
 	}
 
 	homedir := os.Getenv("HOME")
-	currdir := os.Getenv("PWD")
-	shortdir := strings.Replace(currdir, homedir, "", 1)
-	cleandir := strings.Trim(shortdir, "/")
+	workdir := os.Getenv("PWD")
 
-	// Draw the sequence of folders of the current path.
-	maxsegms := p.config.CwdN
-	dirparts := strings.Split(cleandir, "/")
-	ttlparts := len(dirparts)
-	lastsegm := (ttlparts - 1)
+	p.DirectoriesHome(homedir, workdir)
+	p.DirectoriesOthers(homedir, workdir)
+	p.DirectoriesReadOnly(homedir, workdir)
+}
 
-	if maxsegms < 1 {
-		maxsegms = 1
+func (p *Powergoline) DirectoriesHome(homedir string, workdir string) {
+	if strings.HasPrefix(workdir, homedir) {
+		// Add a tilde to represent that we are inside the home directory.
+		p.AddSegment(u0020+"~"+u0020, p.config.HomeFg, p.config.HomeBg)
+	}
+}
+
+func (p *Powergoline) DirectoriesOthers(homedir string, workdir string) {
+	// Since we already considered the home directory in DirectoriesHome, we do
+	// not need to process that portion of the current working directory again.
+	// We can safely remove it and continue with the other folders.
+	workdir = strings.TrimPrefix(workdir, homedir)
+
+	if workdir == "" {
+		return
 	}
 
-	if ttlparts > maxsegms {
-		newparts := make([]string, 0)
-		offset := (maxsegms - 1)
-		newparts = append(newparts, u2026)
-		for k := offset; k >= 0; k-- {
-			newparts = append(newparts, dirparts[lastsegm-k])
-		}
-		dirparts = newparts
-		lastsegm = maxsegms
+	if workdir == sep {
+		p.AddSegment(u0020+sep+u0020, p.config.CwdFg, p.config.CwdBg)
+		return
 	}
 
-	// Print home directory segment if necessary.
-	if strings.Index(currdir, homedir) == 0 {
-		p.HomeDirectory()
+	folders := strings.Split(workdir, sep)
+	ttldirs := len(folders)
+
+	if ttldirs > p.config.CwdN {
+		// Replace parent folders with an ellipsis if the path is too long.
+		folders = append([]string{"", u2026}, folders[ttldirs-p.config.CwdN:]...)
 	}
 
-	// Draw each directory segment with right arrow.
-	for key, folder := range dirparts {
-		if folder == "" {
-			continue
-		}
+	// Combine adding a powerline arrow line in between folders.
+	// We start at index one because the first folder is empty.
+	workdir = strings.Join(folders[1:], u0020+uE0B1+u0020)
 
-		p.AddSegment(u0020+folder+u0020, p.config.CwdFg, p.config.CwdBg)
+	p.AddSegment(u0020+workdir+u0020, p.config.CwdFg, p.config.CwdBg)
+}
 
-		if key == lastsegm {
-			p.AddSegment(uE0B0, p.config.CwdBg, auto)
-		} else {
-			p.AddSegment(uE0B1, p.config.CwdFg, p.config.CwdBg)
-		}
-	}
-
-	// Draw lock if current directory is read-only.
-	if p.IsRdonlyDir(currdir) {
+func (p *Powergoline) DirectoriesReadOnly(homedir string, workdir string) {
+	if p.IsRdonlyDir(workdir) {
+		// Draw lock symbol if the current directory is read-only.
 		p.AddSegment(u0020+uE0A2+u0020, p.config.RodirFg, p.config.RodirBg)
-		p.AddSegment(uE0B0, p.config.RodirBg, auto)
 	}
 }
 
@@ -278,10 +273,10 @@ func (p *Powergoline) RepoStatusExclude() bool {
 		return true
 	}
 
-	currdir := os.Getenv("PWD")
+	workdir := os.Getenv("PWD")
 
 	for _, folder := range p.config.RepoExclude {
-		if currdir == folder {
+		if workdir == folder {
 			return true
 		}
 	}
