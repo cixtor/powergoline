@@ -249,7 +249,6 @@ func BenchmarkAll(b *testing.B) {
 			StatusCode: 0,
 		})
 
-		p.TermTitle()
 		p.Datetime()
 		p.Username()
 		p.Hostname()
@@ -258,16 +257,6 @@ func BenchmarkAll(b *testing.B) {
 		p.CallPlugins()
 		p.RootSymbol()
 
-		p.PrintSegments(&buf)
-	}
-}
-
-func BenchmarkTermTitle(b *testing.B) {
-	var buf bytes.Buffer
-
-	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{})
-		p.TermTitle()
 		p.PrintSegments(&buf)
 	}
 }

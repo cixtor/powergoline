@@ -101,7 +101,6 @@ func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 
 // Render sends all the segments to the standard output.
 func (p Powergoline) Render(w io.Writer) int {
-	p.TermTitle()
 	p.Datetime()
 	p.Username()
 	p.Hostname()
@@ -176,11 +175,6 @@ func (p Powergoline) IsWritable(folder string) bool {
 // IsRdonlyDir checks if a directory is read only by the current user.
 func (p Powergoline) IsRdonlyDir(folder string) bool {
 	return !p.IsWritable(folder)
-}
-
-// TermTitle defines the template for the terminal title.
-func (p *Powergoline) TermTitle() {
-	p.AddSegment("\\[\\e]0;\\u@\\h: \\w\\a\\]", -1, -1)
 }
 
 // Datetime defines a segment with the current date and time.
