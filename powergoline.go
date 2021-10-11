@@ -18,10 +18,10 @@ import (
 // auto is an invalid xterm color code used to represent automatic selection of
 // the color, either foreground or background, of the previous segment in the
 // list to colorize the next segment.
-var auto int = 0x9999
+var auto int = 0x29a
 
-// u000a is Unicode for `\n` (new line).
-const u000a = "\u000a"
+// u000A is Unicode for `\n` (new line).
+const u000A = "\u000A"
 
 // u0020 is Unicode for `\s` (whitespace).
 const u0020 = "\u0020"
@@ -118,53 +118,73 @@ func (p Powergoline) Render(w io.Writer) int {
 }
 
 // Print sends a segment to the standard output.
-func (p Powergoline) Print(w io.Writer, s string, fg int, bg int) (int, error) {
+func (p Powergoline) Print(w io.Writer, seg Segment) (int, error) {
 	var color string
 
-	fore := colorize(fg)
-	back := colorize(bg)
+	fore := colorize(seg.Fg)
+	back := colorize(seg.Bg)
 
 	// Add the foreground and background colors.
-	if fg > -1 && bg > -1 {
+	if seg.Fg > -1 && seg.Bg > -1 {
 		color += "38;5;" + fore + ";" + "48;5;" + back
-	} else if fg > -1 {
+	} else if seg.Fg > -1 {
 		color += "38;5;" + fore
-	} else if bg > -1 {
+	} else if seg.Bg > -1 {
 		color += "48;5;" + back
 	}
 
 	// Draw the color sequences if necessary.
 	if len(color) > 0 {
-		return fmt.Fprint(w, "\\[\\e["+color+"m\\]"+s+"\\[\\e[0m\\]")
+		return fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.S+"\\[\\e[0m\\]")
 	}
 
-	return fmt.Fprint(w, s)
+	return fmt.Fprint(w, seg.S)
 }
 
 // PrintSegments prints all the segments as the command prompt.
 func (p Powergoline) PrintSegments(w io.Writer) (int, error) {
-	var curr Segment
+	pieces := p.pieces
+	total := len(pieces)
 
-	ttlsegms := len(p.pieces)
+	for i := 0; i < total; i++ {
+		section := pieces[i]
 
-	for key := 0; key < ttlsegms; key++ {
-		curr = p.pieces[key]
-
-		// Use the next segment's background color for the current segment.
-		if curr.Bg == auto && len(p.pieces) > key+1 {
-			curr.Bg = p.pieces[key+1].Bg
+		if section.S == "" {
+			continue
 		}
 
-		// prevent arbitrary code execution in subshell expressions.
-		curr.S = strings.Replace(curr.S, "$", "\\$", -1)
-		curr.S = strings.Replace(curr.S, "`", "\\`", -1)
+		// Prevent arbitrary code execution in subshell expressions.
+		section.S = strings.Replace(section.S, "$", "\\$", -1)
+		section.S = strings.Replace(section.S, "`", "\\`", -1)
 
-		if _, err := p.Print(w, curr.S, curr.Fg, curr.Bg); err != nil {
+		if _, err := p.Print(w, section); err != nil {
+			return 0, err
+		}
+
+		// If the segment is an arrow, then we will assume that both Fg and Bg
+		// are "auto", which means we must select the corresponding colors from
+		// the adjacent segments.
+		//
+		// The foreground color must be background of the left segment.
+		//
+		// The background color must be background of the right segment.
+		//
+		// ┌───┬───┬─────┬───┬─────────────┬───┬─────────────┬───┬───┬───┐
+		// │ ~ │ > │ ... │ > │ powergoline │ > │ hello world │ > │ $ │ > │
+		// └───┴───┴─────┴───┴─────────────┴───┴─────────────┴───┴───┴───┘
+		//       ▲         ▲                 ▲                 ▲       ▲
+		//       │         │                 │                 │       │
+		//     arrow     arrow             arrow             arrow   arrow
+		arrow := Segment{S: uE0B0, Fg: section.Bg, Bg: -1}
+		if i+1 < total {
+			arrow.Bg = pieces[i+1].Bg
+		}
+		if _, err := p.Print(w, arrow); err != nil {
 			return 0, err
 		}
 	}
 
-	return fmt.Fprint(w, u0020+u000a)
+	return fmt.Fprint(w, u0020+u000A)
 }
 
 // IsWritable checks if the process can write in a directory.
@@ -184,7 +204,6 @@ func (p *Powergoline) Datetime() {
 	}
 
 	p.AddSegment(u0020+time.Now().Format(p.config.TimeFmt)+u0020, p.config.TimeFg, p.config.TimeBg)
-	p.AddSegment(uE0B0, p.config.TimeBg, auto)
 }
 
 // Username defines a segment with the name of the current account.
@@ -194,7 +213,6 @@ func (p *Powergoline) Username() {
 	}
 
 	p.AddSegment(u0020+"\\u"+u0020, p.config.UserFg, p.config.UserBg)
-	p.AddSegment(uE0B0, p.config.UserBg, auto)
 }
 
 // Hostname defines a segment with the name of this system.
@@ -204,7 +222,6 @@ func (p *Powergoline) Hostname() {
 	}
 
 	p.AddSegment(u0020+"\\h"+u0020, p.config.HostFg, p.config.HostBg)
-	p.AddSegment(uE0B0, p.config.HostBg, auto)
 }
 
 var sep string = "/"
@@ -334,7 +351,6 @@ func (p *Powergoline) RepoStatus() {
 	}
 
 	p.AddSegment(branch, p.config.RepoFg, p.config.RepoBg)
-	p.AddSegment(uE0B0, p.config.RepoBg, auto)
 }
 
 // CallPlugins runs all the user defined plugins.
@@ -368,7 +384,6 @@ func (p *Powergoline) CallPlugins() {
 		}
 
 		p.AddSegment(u0020+bucket[i].S+u0020, bucket[i].Fg, bucket[i].Bg)
-		p.AddSegment(uE0B0, auto, auto)
 	}
 }
 
@@ -393,7 +408,7 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 
 	out <- Segment{
 		S:       string(output),
-		Fg:      p.config.CwdFg,
+		Fg:      auto,
 		Bg:      auto,
 		Index:   index,
 		Runtime: runtime,
@@ -445,7 +460,6 @@ func (p *Powergoline) RootSymbol() {
 	}
 
 	p.AddSegment(u0020+symbol+u0020, p.config.StatusFg, color)
-	p.AddSegment(uE0B0, color, -1)
 }
 
 // runcmd executes an external command and returns the output.
