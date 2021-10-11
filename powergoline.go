@@ -15,11 +15,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// auto is an invalid xterm color code used to represent automatic selection of
-// the color, either foreground or background, of the previous segment in the
-// list to colorize the next segment.
-var auto int = 0x29a
-
 // u000A is Unicode for `\n` (new line).
 const u000A = "\u000A"
 
@@ -64,10 +59,23 @@ type Powergoline struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	S       string
-	Fg      int
-	Bg      int
+	S  string
+	Fg int
+	Bg int
+}
+
+// PluginOutput struct represents the output of an external program after its
+// execution along with some runtime information and an index. The index field
+// is used to keep track of the order in which the programs were executed; for
+// example, the first program to execute will have an index of 0, the second
+// will have an index of 1, and so on.
+//
+// This struct is typically used in conjunction with a slice of PluginOutput
+// structs, where each struct in the slice represents the output of a single
+// program execution.
+type PluginOutput struct {
 	Index   int
+	Output  string
 	Runtime time.Duration
 }
 
@@ -357,38 +365,40 @@ func (p *Powergoline) RepoStatus() {
 func (p *Powergoline) CallPlugins() {
 	sem := make(chan bool, 20)
 	total := len(p.config.Plugins)
-	output := make(chan Segment)
-	bucket := make([]Segment, total)
+	output := make(chan PluginOutput)
+	bucket := make([]PluginOutput, total)
 
 	for index, metadata := range p.config.Plugins {
 		go p.ExecutePlugin(sem, output, index, metadata)
 	}
 
-	var seg Segment
+	var pout PluginOutput
+
 	for i := 0; i < total; i++ {
-		seg = <-output
-		bucket[seg.Index] = seg
+		pout = <-output
+		bucket[pout.Index] = pout
 	}
+
+	allOutputs := []string{}
 
 	for i := 0; i < total; i++ {
 		if p.config.Debug {
-			fmt.Printf(
-				"%s took %s\n",
-				p.config.Plugins[i].Name,
-				bucket[i].Runtime,
-			)
+			fmt.Printf("%s took %s\n", p.config.Plugins[i].Name, bucket[i].Runtime)
 		}
 
-		if bucket[i].S == "" {
+		if bucket[i].Output == "" {
 			continue
 		}
 
-		p.AddSegment(u0020+bucket[i].S+u0020, bucket[i].Fg, bucket[i].Bg)
+		allOutputs = append(allOutputs, bucket[i].Output)
 	}
+
+	outSeq := strings.Join(allOutputs, u0020+uE0B1+u0020)
+	p.AddSegment(u0020+outSeq+u0020, p.config.PluginFg, p.config.PluginBg)
 }
 
 // ExecutePlugin runs an user defined external command.
-func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, addon Plugin) {
+func (p *Powergoline) ExecutePlugin(sem chan bool, out chan PluginOutput, index int, addon Plugin) {
 	sem <- true /* block */
 	defer func() { <-sem }()
 
@@ -397,7 +407,7 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 	runtime := time.Since(start)
 
 	if errors.Is(err, errEmptyOutput) {
-		out <- Segment{Index: index, Runtime: runtime}
+		out <- PluginOutput{Index: index, Runtime: runtime}
 		return
 	}
 
@@ -406,10 +416,8 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan Segment, index int, 
 		output = []byte(err.Error())
 	}
 
-	out <- Segment{
-		S:       string(output),
-		Fg:      auto,
-		Bg:      auto,
+	out <- PluginOutput{
+		Output:  string(output),
 		Index:   index,
 		Runtime: runtime,
 	}

@@ -56,6 +56,8 @@ func main() {
 	flag.Var(&config.RepoExclude, "repo.exclude", "Sets repo.on=false for the specified folder")
 	flag.Var(&config.RepoInclude, "repo.include", "Sets repo.on=true for the specified folder")
 	flag.Var(&config.Plugins, "plugin", "Defines a plugin with optional arguments (e.g. -plugin=\"echo hello world\")\nDefine multiple plugins like this: -plugin=A -plugin=B -plugin=C")
+	flag.IntVar(&config.PluginFg, "plugin.fg", 0, "Defines the plugin output foreground color")
+	flag.IntVar(&config.PluginBg, "plugin.bg", 11, "Defines the plugin output background color")
 	flag.StringVar(&config.SymbolRoot, "symbol.root", "#", "Defines the prompt symbol for the Root user session")
 	flag.StringVar(&config.SymbolUser, "symbol.user", "$", "Defines the prompt symbol for a Regular user session")
 	flag.IntVar(&config.StatusFg, "status.fg", 255, "Defines the program exit status foreground color")

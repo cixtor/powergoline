@@ -32,6 +32,8 @@ type Config struct {
 	RepoExclude      FlagStringArray
 	RepoInclude      FlagStringArray
 	Plugins          FlagPluginArray
+	PluginFg         int
+	PluginBg         int
 	SymbolRoot       string
 	SymbolUser       string
 	StatusFg         int
