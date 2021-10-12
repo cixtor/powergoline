@@ -327,7 +327,7 @@ func (p *Powergoline) RepoStatus() {
 	}
 
 	if stderr != nil {
-		fmt.Printf(program+"; repo %s\n", err)
+		fmt.Println("hgrepo", err)
 		return
 	}
 
@@ -431,15 +431,15 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan PluginOutput, index 
 //
 // System status codes:
 //
-//   0     - Operation success and generic status code.
-//   1     - Catchall for general errors and failures.
-//   2     - Misuse of shell builtins, missing command or permission problem.
-//   126   - Cannot execute command, permission problem, or not an executable.
-//   127   - Command not found, illegal path, or possible typo.
-//   128   - Invalid argument to exit, only use range 0-255.
-//   128+n - Fatal error signal where "n" is the PID.
-//   130   - Script terminated by Control-C.
-//   255*  - Exit status out of range.
+//	> 0     - Operation success and generic status code.
+//	> 1     - Catchall for general errors and failures.
+//	> 2     - Misuse of shell builtins, missing command or permission problem.
+//	> 126   - Cannot execute command, permission problem, or not an executable.
+//	> 127   - Command not found, illegal path, or possible typo.
+//	> 128   - Invalid argument to exit, only use range 0-255.
+//	> 128+n - Fatal error signal where "n" is the PID.
+//	> 130   - Script terminated by Control-C.
+//	> 255*  - Exit status out of range.
 func (p *Powergoline) RootSymbol() {
 	var color int
 	var symbol string
@@ -513,13 +513,13 @@ func repoStatusGit() (RepoStatus, error) {
 
 // repoStatusGitParse parses the output of the `git status` command.
 //
-//   ## master...origin/master [ahead 5, behind 8]
-//   D  deleted.txt
-//    D missing.txt
-//   M  patches.go
-//    M changes.go
-//   A  newfile.sh
-//   ?? isadded.json
+//	> ## master...origin/master [ahead 5, behind 8]
+//	> D  deleted.txt
+//	>  D missing.txt
+//	> M  patches.go
+//	>  M changes.go
+//	> A  newfile.sh
+//	> ?? isadded.json
 func repoStatusGitParse(lines [][]byte) (RepoStatus, error) {
 	var status RepoStatus
 
@@ -554,11 +554,11 @@ func repoStatusGitParse(lines [][]byte) (RepoStatus, error) {
 
 // repoStatusGitBranch parses the header of the `git status` command.
 //
-//   ## master
-//   ## master...origin/master
-//   ## master...origin/master [ahead 5]
-//   ## master...origin/master [behind 8]
-//   ## master...origin/master [ahead 5, behind 8]
+//	> ## master
+//	> ## master...origin/master
+//	> ## master...origin/master [ahead 5]
+//	> ## master...origin/master [behind 8]
+//	> ## master...origin/master [ahead 5, behind 8]
 func repoStatusGitBranch(status *RepoStatus, line []byte) {
 	var bols [][]byte
 	var clean []byte
@@ -616,12 +616,12 @@ func repoStatusMercurial() (RepoStatus, error) {
 
 // repoStatusMercurialParse parses the output of the `hg status` command.
 //
-//   A newfile.sh
-//   ? isadded.json
-//   M patches.go
-//   M changes.go
-//   R deleted.txt
-//   ! missing.txt
+//	> A newfile.sh
+//	> ? isadded.json
+//	> M patches.go
+//	> M changes.go
+//	> R deleted.txt
+//	> ! missing.txt
 func repoStatusMercurialParse(lines [][]byte) (RepoStatus, error) {
 	var status RepoStatus
 
