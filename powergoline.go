@@ -393,6 +393,10 @@ func (p *Powergoline) CallPlugins() {
 		allOutputs = append(allOutputs, bucket[i].Output)
 	}
 
+	if len(allOutputs) == 0 {
+		return
+	}
+
 	outSeq := strings.Join(allOutputs, u0020+uE0B1+u0020)
 	p.AddSegment(u0020+outSeq+u0020, p.config.PluginFg, p.config.PluginBg)
 }
