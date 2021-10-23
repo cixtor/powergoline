@@ -11,7 +11,14 @@ A lightweight status line for your terminal emulator. This project aims to be a 
 
 ```sh
 function set_prompt_command() {
-  export PS1="$(powergoline $? 2> /dev/null)"
+  RESULT=$(
+    powergoline \
+    -cwd.on \
+    -cwd.n=1 \
+    -plugin="echo hello" \
+    -status.code="$?"
+  )
+  export PS1="$RESULT"
 }
 export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
 ```
@@ -20,41 +27,56 @@ export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
 
 ## Configuration
 
-The program creates a JSON file with the default configuration in the home directory `$HOME/.powergoline.json`. You can modify this file to enable or disable different segments of the user prompt. You can control the CVS integration (Git and Mercurial), number of folders, date and time, username, hostname, you can even add your own segments to the prompt with custom plugins. You can reset the configuration by deleting this file.
+Use `powergoline -h` to print a list of available options.
 
-Some themes are available in `$GOPATH/src/github.com/cixtor/powergoline/themes/`
+Update the `set_prompt_command` function to add or remove flags accordingly. 
+
+Some color schemes to colorize the prompt are available in the [themes](https://github.com/cixtor/powergoline/tree/master/themes) folder.
 
 ## Plugins
 
-The program allows you to execute external commands to complement the information provided by the built-in features. The output of these external programs is expected to be a single line. They will all appear before the status symbol and you can configure the background and foreground colors. You can execute as many plugins as you want.
+Add one or more `-plugin="..."` flags to `set_prompt_command`.
 
-Below is an example using two plugins `timestamp` and `shrug`. Executable files in `$PATH` are also available inside the plugins environment. By default, the prompt prints everything the plugin sends to `/dev/stdout`. You can report errors by sending a message to `/dev/stderr` and stopping the script with exit code `1` (one).
+Each plugin must execute a command available in `$PATH`.
 
+Background and foreground colors are automatically selected based on the surrouding prompt segments.
+
+Report errors via `/dev/stderr` and stop the program with `exit(1)` in your corresponding language.
+
+# Performance
+
+Average performance with the default features:
+
+```sh
+$ hyperfine --shell=none 'powergoline'
+Benchmark 1: powergoline
+  Time (mean ± σ):       4.3 ms ±   0.8 ms    [User: 1.4 ms, System: 1.3 ms]
+  Range (min … max):     3.7 ms …  11.9 ms    597 runs
 ```
-"plugins": [
-  {
-    "command": "/usr/local/bin/timestamp",
-    "background": "255",
-    "foreground": "023"
-  },
-  {
-    "command": "/Users/foo/.bin/shrug",
-    "background": "250",
-    "foreground": "020"
-  }
-]
+
+Average performance with the most basic features enabled:
+
+```sh
+$ hyperfine --shell=none 'powergoline ...'
+Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -status.code=0
+  Time (mean ± σ):       4.3 ms ±   0.5 ms    [User: 1.5 ms, System: 1.3 ms]
+  Range (min … max):     3.8 ms …   7.1 ms    545 runs
 ```
 
-## Performance
+Average performance with the plugin system enabled:
 
+```sh
+$ hyperfine --shell=none 'powergoline ...'
+Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -plugin="echo hello" -status.code=0
+  Time (mean ± σ):       6.8 ms ±   1.0 ms    [User: 2.4 ms, System: 3.1 ms]
+  Range (min … max):     5.8 ms …  12.0 ms    261 runs
 ```
-BenchmarkAll-4                 126     9462561 ns/op
-BenchmarkTermTitle-4       3224344         365 ns/op
-BenchmarkDatetime-4        1000000        1092 ns/op
-BenchmarkUsername-4        1591448         746 ns/op
-BenchmarkHostname-4        1537056         752 ns/op
-BenchmarkDirectories-4      106248       11328 ns/op
-BenchmarkRepoStatus-4          144     7536442 ns/op
-BenchmarkCallPlugins-4         308     3822583 ns/op
-BenchmarkRootSymbol-4      1000000        1048 ns/op
+
+Average performance with the repository feature enabled:
+
+```sh
+$ hyperfine --shell=none 'powergoline ...'
+Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -repo.on -status.code=0
+  Time (mean ± σ):      19.5 ms ±   6.3 ms    [User: 7.2 ms, System: 7.8 ms]
+  Range (min … max):    12.7 ms …  46.7 ms    115 runs
 ```
