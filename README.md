@@ -77,6 +77,6 @@ Average performance with the repository feature enabled:
 ```sh
 $ hyperfine --shell=none 'powergoline ...'
 Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -repo.on -status.code=0
-  Time (mean ± σ):      19.5 ms ±   6.3 ms    [User: 7.2 ms, System: 7.8 ms]
-  Range (min … max):    12.7 ms …  46.7 ms    115 runs
+  Time (mean ± σ):      16.3 ms ±   2.3 ms    [User: 6.7 ms, System: 7.2 ms]
+  Range (min … max):    12.9 ms …  28.1 ms    139 runs
 ```

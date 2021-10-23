@@ -528,7 +528,7 @@ func repoStatusGitParse(lines [][]byte) (RepoStatus, error) {
 			continue
 		}
 
-		if bytes.Equal(line[0:2], []byte{'#', '#'}) {
+		if line[0] == '#' && line[1] == '#' {
 			repoStatusGitBranch(&status, line)
 			continue
 		}
