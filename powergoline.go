@@ -93,8 +93,16 @@ type RepoStatus struct {
 	Modified int
 }
 
+var themes = map[string]func(Config) Config{
+}
+
 // NewPowergoline loads the config file and instantiates Powergoline.
 func NewPowergoline(config Config) *Powergoline {
+	if config.Theme != "" {
+		if applyThemeConfig, ok := themes[config.Theme]; ok {
+			config = applyThemeConfig(config)
+		}
+	}
 	return &Powergoline{config: config}
 }
 

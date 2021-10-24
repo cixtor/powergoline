@@ -11,13 +11,7 @@ A lightweight status line for your terminal emulator. This project aims to be a 
 
 ```sh
 function set_prompt_command() {
-  RESULT=$(
-    powergoline \
-    -cwd.on \
-    -cwd.n=1 \
-    -plugin="echo hello" \
-    -status.code="$?"
-  )
+  RESULT=$(powergoline -cwd.n=3 -status.code="$?")
   export PS1="$RESULT"
 }
 export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
@@ -27,7 +21,7 @@ export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
 
 ## Configuration
 
-Use `powergoline -h` to print a list of available options.
+Use `powergoline -h` to see all available options.
 
 Update the `set_prompt_command` function to add or remove flags accordingly. 
 

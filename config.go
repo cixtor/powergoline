@@ -47,6 +47,7 @@ type Config struct {
 	StatusErrSignal  int
 	StatusTerminated int
 	StatusOutofrange int
+	Theme            string
 }
 
 type FlagStringArray []string
