@@ -213,27 +213,31 @@ func compareRootSymbol(t *testing.T, status int, color string) {
 	}
 }
 
-func TestRootSymbol000(t *testing.T) { compareRootSymbol(t, 0, "000") }
+func TestRootSymbol(t *testing.T) {
+	testCases := []struct {
+		Name   string
+		Status int
+		Color  string
+	}{
+		{Name: "RootSymbol000", Status: 0, Color: "000"},
+		{Name: "RootSymbol111", Status: 1, Color: "111"},
+		{Name: "RootSymbol222", Status: 2, Color: "222"},
+		{Name: "RootSymbol126", Status: 126, Color: "126"},
+		{Name: "RootSymbol127", Status: 127, Color: "127"},
+		{Name: "RootSymbol128", Status: 128, Color: "128"},
+		{Name: "RootSymbol129", Status: 129, Color: "333"},
+		{Name: "RootSymbol130", Status: 130, Color: "130"},
+		{Name: "RootSymbol133", Status: 133, Color: "333"},
+		{Name: "RootSymbol256", Status: 256, Color: "999"},
+		{Name: "RootSymbolABC", Status: 300, Color: "999"},
+	}
 
-func TestRootSymbol111(t *testing.T) { compareRootSymbol(t, 1, "111") }
-
-func TestRootSymbol222(t *testing.T) { compareRootSymbol(t, 2, "222") }
-
-func TestRootSymbol126(t *testing.T) { compareRootSymbol(t, 126, "126") }
-
-func TestRootSymbol127(t *testing.T) { compareRootSymbol(t, 127, "127") }
-
-func TestRootSymbol128(t *testing.T) { compareRootSymbol(t, 128, "128") }
-
-func TestRootSymbol129(t *testing.T) { compareRootSymbol(t, 129, "333") }
-
-func TestRootSymbol130(t *testing.T) { compareRootSymbol(t, 130, "130") }
-
-func TestRootSymbol133(t *testing.T) { compareRootSymbol(t, 133, "333") }
-
-func TestRootSymbol256(t *testing.T) { compareRootSymbol(t, 256, "999") }
-
-func TestRootSymbolABC(t *testing.T) { compareRootSymbol(t, 300, "999") }
+	for _, tx := range testCases {
+		t.Run(tx.Name, func(t *testing.T) {
+			compareRootSymbol(t, tx.Status, tx.Color)
+		})
+	}
+}
 
 func BenchmarkAll(b *testing.B) {
 	var buf bytes.Buffer
