@@ -95,6 +95,7 @@ type RepoStatus struct {
 
 var themes = map[string]func(Config) Config{
 	"agnoster":   ApplyAgnosterTheme,
+	"astrocom":   ApplyAstrocomTheme,
 }
 
 // NewPowergoline loads the config file and instantiates Powergoline.
