@@ -97,6 +97,7 @@ var themes = map[string]func(Config) Config{
 	"agnoster":   ApplyAgnosterTheme,
 	"astrocom":   ApplyAstrocomTheme,
 	"bluescale":  ApplyBlueScaleTheme,
+	"colorish":   ApplyColorishTheme,
 }
 
 // NewPowergoline loads the config file and instantiates Powergoline.
