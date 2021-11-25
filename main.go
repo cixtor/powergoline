@@ -30,6 +30,15 @@ import (
 // config is the user-provided configuration.
 var config Config
 
+var themes = map[string]func(Config) Config{
+	"agnoster":   ApplyAgnosterTheme,
+	"astrocom":   ApplyAstrocomTheme,
+	"bluescale":  ApplyBlueScaleTheme,
+	"colorish":   ApplyColorishTheme,
+	"grayscale":  ApplyGrayScaleTheme,
+	"wildcherry": ApplyWildCherryTheme,
+}
+
 func main() {
 	flag.BoolVar(&config.Debug, "debug", false, "Prints plugin runtime statistics")
 	flag.BoolVar(&config.TimeOn, "time.on", false, "Prints date and time, use -time.fmt to format")
