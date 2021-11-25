@@ -11,7 +11,7 @@ A lightweight status line for your terminal emulator. This project aims to be a 
 
 ```sh
 function set_prompt_command() {
-  RESULT=$(powergoline -cwd.n=3 -status.code="$?")
+  RESULT=$(powergoline -theme="wildcherry" -status.code="$?")
   export PS1="$RESULT"
 }
 export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
@@ -25,7 +25,7 @@ Use `powergoline -h` to see all available options.
 
 Update the `set_prompt_command` function to add or remove flags accordingly. 
 
-Some color schemes to colorize the prompt are available in the [themes](https://github.com/cixtor/powergoline/tree/master/themes) folder.
+Select a predefined color scheme using the `-theme` flag and one of these values: agnoster, astrocom, bluescale, colorish, grayscale, wildcherry, or create your own by passing the corresponding `-ABC.fg` and `-ABC.bg` flags for the foreground and background colors, respectivevly.
 
 ## Plugins
 
