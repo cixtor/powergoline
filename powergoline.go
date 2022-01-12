@@ -297,26 +297,26 @@ func (p *Powergoline) DirectoriesReadOnly(homedir string, workdir string) {
 	}
 }
 
-// RepoStatusExclude checks if the current folder excludes repository status.
-func (p *Powergoline) RepoStatusExclude() bool {
+// IsRepoStatusEnabled checks if the current folder excludes repository status.
+func (p *Powergoline) IsRepoStatusEnabled() bool {
 	if !p.config.RepoOn {
-		return true
+		return false
 	}
 
 	workdir := os.Getenv("PWD")
 
 	for _, folder := range p.config.RepoExclude {
 		if workdir == folder {
-			return true
+			return false
 		}
 	}
 
-	return false
+	return true
 }
 
 // RepoStatus defines a segment with information of a DCVS.
 func (p *Powergoline) RepoStatus() {
-	if p.RepoStatusExclude() {
+	if !p.IsRepoStatusEnabled() {
 		return
 	}
 
