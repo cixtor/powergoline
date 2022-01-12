@@ -15,32 +15,17 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// u000A is Unicode for `\n` (new line).
-const u000A = "\u000A"
-
-// u0020 is Unicode for `\s` (whitespace).
-const u0020 = "\u0020"
-
-// u2026 is Unicode for `…` (ellipsis).
-const u2026 = "\u2026"
-
-// u21E1 is Unicode for `⇡` (upwards dashed arrow).
-const u21E1 = "\u21E1"
-
-// u21E3 is Unicode for `⇣` (downwards dashed arrow).
-const u21E3 = "\u21E3"
-
-// uE0A0 is Unicode for `` (GitHub fork symbol).
-const uE0A0 = "\uE0A0"
-
-// uE0A2 is Unicode for `` (GitHub lock symbol).
-const uE0A2 = "\uE0A2"
-
-// uE0B0 is Unicode for `` (powerline arrow body).
-const uE0B0 = "\uE0B0"
-
-// uE0B1 is Unicode for `` (powerline arrow line).
-const uE0B1 = "\uE0B1"
+const (
+	u000A string = "\u000A" // u000A is Unicode for `\n` (new line).
+	u0020 string = "\u0020" // u0020 is Unicode for `\s` (whitespace).
+	u2026 string = "\u2026" // u2026 is Unicode for `…` (ellipsis).
+	u21E1 string = "\u21E1" // u21E1 is Unicode for `⇡` (upwards dashed arrow).
+	u21E3 string = "\u21E3" // u21E3 is Unicode for `⇣` (downwards dashed arrow).
+	uE0A0 string = "\uE0A0" // uE0A0 is Unicode for `` (GitHub fork symbol).
+	uE0A2 string = "\uE0A2" // uE0A2 is Unicode for `` (GitHub lock symbol).
+	uE0B0 string = "\uE0B0" // uE0B0 is Unicode for `` (powerline arrow body).
+	uE0B1 string = "\uE0B1" // uE0B1 is Unicode for `` (powerline arrow line).
+)
 
 // errEmptyOutput defines an error when executing a command with no output.
 var errEmptyOutput = errors.New("empty output")
