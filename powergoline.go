@@ -152,8 +152,8 @@ func (p Powergoline) PrintSegments(w io.Writer) (int, error) {
 		}
 
 		// Prevent arbitrary code execution in subshell expressions.
-		section.S = strings.Replace(section.S, "$", "\\$", -1)
-		section.S = strings.Replace(section.S, "`", "\\`", -1)
+		section.S = strings.ReplaceAll(section.S, "$", "\\$")
+		section.S = strings.ReplaceAll(section.S, "`", "\\`")
 
 		if _, err := p.Print(w, section); err != nil {
 			return 0, err
@@ -569,7 +569,7 @@ func repoStatusGitBranch(status *RepoStatus, line []byte) {
 	}
 
 	line = line[opening:closing]
-	line = bytes.Replace(line, []byte(u0020), []byte{}, -1)
+	line = bytes.ReplaceAll(line, []byte(u0020), []byte{})
 	bols = bytes.Split(line, []byte{','})
 
 	for _, part := range bols {
