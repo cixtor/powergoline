@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -615,7 +614,7 @@ func repoStatusMercurial() (RepoStatus, error) {
 func repoStatusMercurialParse(lines [][]byte) (RepoStatus, error) {
 	var status RepoStatus
 
-	if branch, err := ioutil.ReadFile(".hg/branch"); err == nil {
+	if branch, err := os.ReadFile(".hg/branch"); err == nil {
 		status.Branch = bytes.TrimSpace(branch)
 	} else {
 		status.Branch = []byte("default")
