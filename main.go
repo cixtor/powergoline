@@ -86,5 +86,13 @@ func main() {
 
 	flag.Parse()
 
-	os.Exit(NewPowergoline(config).Render(os.Stdout))
+	NewPowergoline(config).Render(os.Stdout, []SegmentFunc{
+		segmentDatetime,
+		segmentUsername,
+		segmentHostname,
+		segmentDirectories,
+		segmentRepoStatus,
+		segmentCallPlugins,
+		segmentPromptSymbol,
+	})
 }

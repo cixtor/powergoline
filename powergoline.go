@@ -9,8 +9,10 @@ import (
 	"os"
 	"os/exec"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -47,9 +49,11 @@ type Powergoline struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	S  string
-	Fg int
-	Bg int
+	Index uint   // order in which to render.
+	Text  string // text to render.
+	Show  bool   // render if true, hide if false.
+	Fg    int    // foreground color.
+	Bg    int    // background color.
 }
 
 // PluginOutput struct represents the output of an external program after its
@@ -91,77 +95,49 @@ func NewPowergoline(config Config) *Powergoline {
 	return &Powergoline{config: config}
 }
 
-func colorize(n int) string {
-	return fmt.Sprintf("%03d", n)
-}
+type SegmentFunc func(*sync.WaitGroup, chan struct{}, chan Segment, uint, Config)
 
-// AddSegment inserts a new block in the CLI prompt output.
-func (p *Powergoline) AddSegment(s string, fg int, bg int) {
-	p.pieces = append(p.pieces, Segment{S: s, Fg: fg, Bg: bg})
-}
-
-// Render sends all the segments to the standard output.
-func (p Powergoline) Render(w io.Writer) int {
-	p.Datetime()
-	p.Username()
-	p.Hostname()
-	p.Directories()
-	p.RepoStatus()
-	p.CallPlugins()
-	p.RootSymbol()
-
-	if _, err := p.PrintSegments(w); err != nil {
-		fmt.Println(err)
-		return 1
+func (p *Powergoline) Render(w io.Writer, arr []SegmentFunc) {
+	var wg sync.WaitGroup
+	out := make(chan Segment)
+	sem := make(chan struct{}, 10)
+	done := make(chan struct{})
+	go consumer(w, done, out)
+	for priority, fn := range arr {
+		wg.Add(1)
+		sem <- struct{}{ /* lock */ }
+		go fn(&wg, sem, out, uint(priority), p.config)
 	}
-
-	return 0
+	wg.Wait()
+	close(sem)
+	close(out)
+	<-done
 }
 
-// Print sends a segment to the standard output.
-func (p Powergoline) Print(w io.Writer, seg Segment) (int, error) {
-	var color string
-
-	fore := colorize(seg.Fg)
-	back := colorize(seg.Bg)
-
-	// Add the foreground and background colors.
-	if seg.Fg > -1 && seg.Bg > -1 {
-		color += "38;5;" + fore + ";" + "48;5;" + back
-	} else if seg.Fg > -1 {
-		color += "38;5;" + fore
-	} else if seg.Bg > -1 {
-		color += "48;5;" + back
+func consumer(w io.Writer, done chan struct{}, out chan Segment) {
+	defer close(done)
+	var segments []Segment
+	for item := range out {
+		segments = append(segments, item)
 	}
-
-	// Draw the color sequences if necessary.
-	if len(color) > 0 {
-		return fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.S+"\\[\\e[0m\\]")
-	}
-
-	return fmt.Fprint(w, seg.S)
+	sort.Slice(segments, func(i, j int) bool {
+		return segments[i].Index < segments[j].Index
+	})
+	_, _ = printAllSegments(w, segments)
 }
 
-// PrintSegments prints all the segments as the command prompt.
-func (p Powergoline) PrintSegments(w io.Writer) (int, error) {
-	pieces := p.pieces
-	total := len(pieces)
-
-	for i := 0; i < total; i++ {
-		section := pieces[i]
-
-		if section.S == "" {
+func printAllSegments(w io.Writer, segments []Segment) (int, error) {
+	n := len(segments)
+	for i, section := range segments {
+		if section.Text == "" {
 			continue
 		}
-
 		// Prevent arbitrary code execution in subshell expressions.
-		section.S = strings.ReplaceAll(section.S, "$", "\\$")
-		section.S = strings.ReplaceAll(section.S, "`", "\\`")
-
-		if _, err := p.Print(w, section); err != nil {
+		section.Text = strings.ReplaceAll(section.Text, "$", "\\$")
+		section.Text = strings.ReplaceAll(section.Text, "`", "\\`")
+		if _, err := printOneSegment(w, section); err != nil {
 			return 0, err
 		}
-
 		// If the segment is an arrow, then we will assume that both Fg and Bg
 		// are "auto", which means we must select the corresponding colors from
 		// the adjacent segments.
@@ -176,16 +152,100 @@ func (p Powergoline) PrintSegments(w io.Writer) (int, error) {
 		//       ▲         ▲                 ▲                 ▲       ▲
 		//       │         │                 │                 │       │
 		//     arrow     arrow             arrow             arrow   arrow
-		arrow := Segment{S: uE0B0, Fg: section.Bg, Bg: -1}
-		if i+1 < total {
-			arrow.Bg = pieces[i+1].Bg
+		arrow := Segment{Text: uE0B0, Fg: section.Bg, Bg: -1}
+		if i+1 < n {
+			arrow.Bg = segments[i+1].Bg
 		}
-		if _, err := p.Print(w, arrow); err != nil {
+		if _, err := printOneSegment(w, arrow); err != nil {
 			return 0, err
 		}
 	}
-
 	return fmt.Fprint(w, u0020+u000A)
+}
+
+func printOneSegment(w io.Writer, seg Segment) (int, error) {
+	var color string
+	fore := colorize(seg.Fg)
+	back := colorize(seg.Bg)
+	// Add the foreground and background colors.
+	if seg.Fg > -1 && seg.Bg > -1 {
+		color += "38;5;" + fore + ";" + "48;5;" + back
+	} else if seg.Fg > -1 {
+		color += "38;5;" + fore
+	} else if seg.Bg > -1 {
+		color += "48;5;" + back
+	}
+	// Draw the color sequences if necessary.
+	if len(color) > 0 {
+		return fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.Text+"\\[\\e[0m\\]")
+	}
+	return fmt.Fprint(w, seg.Text)
+}
+
+func segmentDatetime(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	// if !config.TimeOn { return }
+	out <- Segment{Index: priority, Text: "segmentDatetime", Show: true}
+}
+
+func segmentUsername(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	// if !config.UserOn { return }
+	out <- Segment{Index: priority, Text: "segmentUsername", Show: true}
+}
+
+func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	// if !config.HostOn { return }
+	out <- Segment{Index: priority, Text: "segmentHostname", Show: true}
+}
+
+func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	// if !config.CwdOn { return }
+	out <- Segment{Index: priority, Text: "segmentDirectories", Show: true}
+}
+
+func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	// if !config.RepoOn { return }
+	out <- Segment{Index: priority, Text: "segmentRepoStatus", Show: true}
+}
+
+func segmentCallPlugins(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	for i, command := range config.Plugins {
+		wg.Add(1)
+		sem <- struct{}{ /* lock */ }
+		go segmentCallOnePlugin(wg, sem, out, uint(i+100), config, command)
+	}
+}
+
+func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config, command Plugin) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	out <- Segment{Index: priority, Text: "segmentCallOnePlugin " + command.Name, Show: true}
+}
+
+func segmentPromptSymbol(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	out <- Segment{Index: 999999, Text: "segmentPromptSymbol", Show: true}
+}
+
+func colorize(n int) string {
+	return fmt.Sprintf("%03d", n)
+}
+
+// AddSegment inserts a new block in the CLI prompt output.
+func (p *Powergoline) AddSegment(s string, fg int, bg int) {
+	p.pieces = append(p.pieces, Segment{Text: s, Fg: fg, Bg: bg})
 }
 
 // IsWritable checks if the process can write in a directory.
