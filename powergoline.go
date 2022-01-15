@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -29,6 +30,8 @@ const (
 
 // errEmptyOutput defines an error when executing a command with no output.
 var errEmptyOutput = errors.New("empty output")
+
+const defaultPluginTimeout time.Duration = time.Second * 3
 
 // Powergoline holds the configuration either defined by the current user in
 // the TTY session or the default settings defined by the program on startup.
@@ -385,7 +388,7 @@ func (p *Powergoline) ExecutePlugin(sem chan bool, out chan PluginOutput, index 
 	defer func() { <-sem }()
 
 	start := time.Now()
-	output, err := call(addon.Name, addon.Args...)
+	output, err := call(p.config.PluginTimeout, addon.Name, addon.Args...)
 	runtime := time.Since(start)
 
 	if errors.Is(err, errEmptyOutput) {
@@ -453,34 +456,32 @@ func (p *Powergoline) RootSymbol() {
 }
 
 // runcmd executes an external command and returns the output.
-func call(name string, arg ...string) ([]byte, error) {
+func call(timeout time.Duration, name string, arg ...string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-
-	cmd := exec.Command(name, arg...)
-
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
+	cmd := exec.CommandContext(ctx, name, arg...)
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return nil, fmt.Errorf("%s timeout after %s", name, timeout)
+		}
 		if stderr.Len() == 0 {
 			return nil, err
 		}
-
 		// include additional information, if possible.
 		return nil, fmt.Errorf("%s", stderr.String())
 	}
-
 	if stdout.Len() == 0 {
 		return nil, errEmptyOutput
 	}
-
 	return bytes.Trim(stdout.Bytes(), "\n"), nil
 }
 
 // repoStatusGit returns information about the current state of a Git repository.
 func repoStatusGit() (RepoStatus, error) {
-	out, err := call("git", "status", "--branch", "--porcelain", "--ignore-submodules")
+	out, err := call(defaultPluginTimeout, "git", "status", "--branch", "--porcelain", "--ignore-submodules")
 
 	if err != nil {
 		return RepoStatus{}, err
@@ -583,7 +584,7 @@ func repoStatusGitBranch(status *RepoStatus, line []byte) {
 
 // repoStatusMercurial returns information about the current state of a Mercurial repository.
 func repoStatusMercurial() (RepoStatus, error) {
-	out, err := call("hg", "status")
+	out, err := call(defaultPluginTimeout, "hg", "status")
 
 	if err != nil {
 		return RepoStatus{}, err

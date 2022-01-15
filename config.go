@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 // Config represents all the available program options.
@@ -34,6 +35,7 @@ type Config struct {
 	Plugins          FlagPluginArray
 	PluginFg         int
 	PluginBg         int
+	PluginTimeout    time.Duration
 	SymbolRoot       string
 	SymbolUser       string
 	StatusFg         int

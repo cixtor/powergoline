@@ -25,6 +25,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 )
 
 // config is the user-provided configuration.
@@ -67,6 +68,7 @@ func main() {
 	flag.Var(&config.Plugins, "plugin", "Defines a plugin with optional arguments (e.g. -plugin=\"echo hello world\")\nDefine multiple plugins like this: -plugin=A -plugin=B -plugin=C")
 	flag.IntVar(&config.PluginFg, "plugin.fg", 0, "Defines the plugin output foreground color")
 	flag.IntVar(&config.PluginBg, "plugin.bg", 11, "Defines the plugin output background color")
+	flag.DurationVar(&config.PluginTimeout, "plugin.timeout", time.Second*5, "Maximum time to wait for a plugin execution")
 	flag.StringVar(&config.SymbolRoot, "symbol.root", "#", "Defines the prompt symbol for the Root user session")
 	flag.StringVar(&config.SymbolUser, "symbol.user", "$", "Defines the prompt symbol for a Regular user session")
 	flag.IntVar(&config.StatusFg, "status.fg", 255, "Defines the program exit status foreground color")
