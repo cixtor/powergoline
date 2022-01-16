@@ -142,10 +142,10 @@ type Powergoline struct {
 // things in shape.
 type Segment struct {
 	Index uint   // order in which to render.
-	Text  string // text to render.
 	Show  bool   // render if true, hide if false.
 	Fg    int    // foreground color.
 	Bg    int    // background color.
+	Text  string // text to render.
 }
 
 // PluginOutput struct represents the output of an external program after its
@@ -274,11 +274,15 @@ func printOneSegment(w io.Writer, seg Segment) (int, error) {
 	return fmt.Fprint(w, seg.Text)
 }
 
+// segmentDatetime prints the current date and time.
 func segmentDatetime(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
-	// if !config.TimeOn { return }
-	out <- Segment{Index: priority, Text: "segmentDatetime", Show: true}
+	if !config.TimeOn {
+		out <- Segment{ /* disabled */ }
+		return
+	}
+	out <- Segment{Index: priority, Show: true, Fg: config.TimeFg, Bg: config.TimeBg, Text: u0020 + time.Now().Format(config.TimeFmt) + u0020}
 }
 
 func segmentUsername(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
@@ -348,15 +352,6 @@ func (p Powergoline) IsWritable(folder string) bool {
 // IsRdonlyDir checks if a directory is read only by the current user.
 func (p Powergoline) IsRdonlyDir(folder string) bool {
 	return !p.IsWritable(folder)
-}
-
-// Datetime defines a segment with the current date and time.
-func (p *Powergoline) Datetime() {
-	if !p.config.TimeOn {
-		return
-	}
-
-	p.AddSegment(u0020+time.Now().Format(p.config.TimeFmt)+u0020, p.config.TimeFg, p.config.TimeBg)
 }
 
 // Username defines a segment with the name of the current account.
