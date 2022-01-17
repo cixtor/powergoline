@@ -296,11 +296,15 @@ func segmentUsername(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, pr
 	out <- Segment{Index: priority, Show: true, Fg: config.UserFg, Bg: config.UserBg, Text: u0020 + "\\u" + u0020}
 }
 
+// segmentHostname prints the name of this system.
 func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
-	// if !config.HostOn { return }
-	out <- Segment{Index: priority, Text: "segmentHostname", Show: true}
+	if !config.HostOn {
+		out <- Segment{ /* disabled */ }
+		return
+	}
+	out <- Segment{Index: priority, Show: true, Fg: config.HostFg, Bg: config.HostBg, Text: u0020 + "\\h" + u0020}
 }
 
 func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
@@ -356,15 +360,6 @@ func (p Powergoline) IsWritable(folder string) bool {
 // IsRdonlyDir checks if a directory is read only by the current user.
 func (p Powergoline) IsRdonlyDir(folder string) bool {
 	return !p.IsWritable(folder)
-}
-
-// Hostname defines a segment with the name of this system.
-func (p *Powergoline) Hostname() {
-	if !p.config.HostOn {
-		return
-	}
-
-	p.AddSegment(u0020+"\\h"+u0020, p.config.HostFg, p.config.HostBg)
 }
 
 var sep string = "/"
