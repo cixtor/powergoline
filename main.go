@@ -285,11 +285,15 @@ func segmentDatetime(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, pr
 	out <- Segment{Index: priority, Show: true, Fg: config.TimeFg, Bg: config.TimeBg, Text: u0020 + time.Now().Format(config.TimeFmt) + u0020}
 }
 
+// segmentUsername prints the name of the current system user, e.g. root.
 func segmentUsername(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
-	// if !config.UserOn { return }
-	out <- Segment{Index: priority, Text: "segmentUsername", Show: true}
+	if !config.UserOn {
+		out <- Segment{ /* disabled */ }
+		return
+	}
+	out <- Segment{Index: priority, Show: true, Fg: config.UserFg, Bg: config.UserBg, Text: u0020 + "\\u" + u0020}
 }
 
 func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
@@ -352,15 +356,6 @@ func (p Powergoline) IsWritable(folder string) bool {
 // IsRdonlyDir checks if a directory is read only by the current user.
 func (p Powergoline) IsRdonlyDir(folder string) bool {
 	return !p.IsWritable(folder)
-}
-
-// Username defines a segment with the name of the current account.
-func (p *Powergoline) Username() {
-	if !p.config.UserOn {
-		return
-	}
-
-	p.AddSegment(u0020+"\\u"+u0020, p.config.UserFg, p.config.UserBg)
 }
 
 // Hostname defines a segment with the name of this system.
