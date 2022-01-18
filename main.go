@@ -352,11 +352,51 @@ func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 	}
 }
 
+// segmentRepoStatus prints the status of the current version control system.
 func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
-	// if !config.RepoOn { return }
-	out <- Segment{Index: priority, Text: "segmentRepoStatus", Show: true}
+	if !config.RepoOn || slices.Contains(config.RepoExclude, os.Getenv("PWD")) {
+		out <- Segment{ /* disabled globally or per-{git,hg}-repository */ }
+		return
+	}
+	var err error
+	var stderr error
+	var status RepoStatus
+	// check if a repository exists in the current folder.
+	if _, err = os.Stat(".git"); !os.IsNotExist(err) {
+		status, stderr = repoStatusGit()
+	} else if _, err = os.Stat(".hg"); !os.IsNotExist(err) {
+		status, stderr = repoStatusMercurial()
+	}
+	if stderr != nil {
+		out <- Segment{Index: priority, Show: true, Text: "hgrepo " + err.Error()}
+		return
+	}
+	if len(status.Branch) == 0 {
+		// hide as there is no information to show.
+		out <- Segment{Index: priority, Show: false}
+		return
+	}
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, " %s %s", uE0A0, status.Branch)
+	if status.Ahead > 0 {
+		fmt.Fprintf(&buf, " %s%d", u21E1, status.Ahead)
+	}
+	if status.Behind > 0 {
+		fmt.Fprintf(&buf, " %s%d", u21E3, status.Behind)
+	}
+	if status.Added > 0 {
+		fmt.Fprintf(&buf, " +%d", status.Added)
+	}
+	if status.Modified > 0 {
+		fmt.Fprintf(&buf, " ~%d", status.Modified)
+	}
+	if status.Deleted > 0 {
+		fmt.Fprintf(&buf, " -%d", status.Deleted)
+	}
+	fmt.Fprint(&buf, " ")
+	out <- Segment{Index: priority, Show: true, Fg: config.RepoFg, Bg: config.RepoBg, Text: buf.String()}
 }
 
 func segmentCallPlugins(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
@@ -398,63 +438,6 @@ func isWritable(folder string) bool {
 // isRdonlyDir checks if a directory is read only by the current user.
 func isRdonlyDir(folder string) bool {
 	return isWritable(folder)
-}
-
-// IsRepoStatusEnabled checks if the current folder excludes repository status.
-func (p *Powergoline) IsRepoStatusEnabled() bool {
-	return p.config.RepoOn && !slices.Contains(p.config.RepoExclude, os.Getenv("PWD"))
-}
-
-// RepoStatus defines a segment with information of a DCVS.
-func (p *Powergoline) RepoStatus() {
-	if !p.IsRepoStatusEnabled() {
-		return
-	}
-
-	var err error
-	var stderr error
-	var status RepoStatus
-
-	// check if a repository exists in the current folder.
-	if _, err = os.Stat(".git"); !os.IsNotExist(err) {
-		status, stderr = repoStatusGit()
-	} else if _, err = os.Stat(".hg"); !os.IsNotExist(err) {
-		status, stderr = repoStatusMercurial()
-	}
-
-	if stderr != nil {
-		fmt.Println("hgrepo", err)
-		return
-	}
-
-	// there is no info to show.
-	if len(status.Branch) == 0 {
-		return
-	}
-
-	branch := fmt.Sprintf(" %s %s ", uE0A0, status.Branch)
-
-	if status.Ahead > 0 {
-		branch += fmt.Sprintf("%s%d ", u21E1, status.Ahead)
-	}
-
-	if status.Behind > 0 {
-		branch += fmt.Sprintf("%s%d ", u21E3, status.Behind)
-	}
-
-	if status.Added > 0 {
-		branch += fmt.Sprintf("+%d ", status.Added)
-	}
-
-	if status.Modified > 0 {
-		branch += fmt.Sprintf("~%d ", status.Modified)
-	}
-
-	if status.Deleted > 0 {
-		branch += fmt.Sprintf("-%d ", status.Deleted)
-	}
-
-	p.AddSegment(branch, p.config.RepoFg, p.config.RepoBg)
 }
 
 // CallPlugins runs all the user defined plugins.
