@@ -307,11 +307,49 @@ func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, pr
 	out <- Segment{Index: priority, Show: true, Fg: config.HostFg, Bg: config.HostBg, Text: u0020 + "\\h" + u0020}
 }
 
+// segmentDirectories prints the current location of the user in the system.
 func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
-	// if !config.CwdOn { return }
-	out <- Segment{Index: priority, Text: "segmentDirectories", Show: true}
+	if !config.CwdOn {
+		out <- Segment{ /* disabled */ }
+		return
+	}
+	homedir := os.Getenv("HOME")
+	workdir := os.Getenv("PWD")
+	sep := string(os.PathSeparator)
+
+	if strings.HasPrefix(workdir, homedir) {
+		// Add a tilde to represent that we are inside the home directory.
+		out <- Segment{Index: priority, Show: true, Fg: config.HomeFg, Bg: config.HomeBg, Text: u0020 + "~" + u0020}
+	}
+
+	// Since we already considered the home directory in DirectoriesHome, we do
+	// not need to process that portion of the current working directory again.
+	// We can safely remove it and continue with the other folders.
+	workdir = strings.TrimPrefix(workdir, homedir)
+	if workdir == "" {
+		return
+	}
+	if workdir == sep {
+		out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + sep + u0020}
+		return
+	}
+	folders := strings.Split(workdir, sep)
+	ttldirs := len(folders)
+	if ttldirs > config.CwdN {
+		// Replace parent folders with an ellipsis if the path is too long.
+		folders = append([]string{"", u2026}, folders[ttldirs-config.CwdN:]...)
+	}
+	// Combine adding a powerline arrow line in between folders.
+	// We start at index one because the first folder is empty.
+	workdir = strings.Join(folders[1:], u0020+uE0B1+u0020)
+	out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + workdir + u0020}
+
+	if isRdonlyDir(workdir) {
+		// Draw lock symbol if the current directory is read-only.
+		out <- Segment{Index: priority, Show: true, Fg: config.RodirFg, Bg: config.RodirBg, Text: u0020 + uE0A2 + u0020}
+	}
 }
 
 func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
@@ -352,74 +390,14 @@ func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 	p.pieces = append(p.pieces, Segment{Text: s, Fg: fg, Bg: bg})
 }
 
-// IsWritable checks if the process can write in a directory.
-func (p Powergoline) IsWritable(folder string) bool {
+// isWritable checks if the process can write in a directory.
+func isWritable(folder string) bool {
 	return unix.Access(folder, unix.W_OK) == nil
 }
 
-// IsRdonlyDir checks if a directory is read only by the current user.
-func (p Powergoline) IsRdonlyDir(folder string) bool {
-	return !p.IsWritable(folder)
-}
-
-var sep string = "/"
-
-// Directories returns the full path of the current directory.
-func (p *Powergoline) Directories() {
-	if !p.config.CwdOn {
-		return
-	}
-
-	homedir := os.Getenv("HOME")
-	workdir := os.Getenv("PWD")
-
-	p.DirectoriesHome(homedir, workdir)
-	p.DirectoriesOthers(homedir, workdir)
-	p.DirectoriesReadOnly(homedir, workdir)
-}
-
-func (p *Powergoline) DirectoriesHome(homedir string, workdir string) {
-	if strings.HasPrefix(workdir, homedir) {
-		// Add a tilde to represent that we are inside the home directory.
-		p.AddSegment(u0020+"~"+u0020, p.config.HomeFg, p.config.HomeBg)
-	}
-}
-
-func (p *Powergoline) DirectoriesOthers(homedir string, workdir string) {
-	// Since we already considered the home directory in DirectoriesHome, we do
-	// not need to process that portion of the current working directory again.
-	// We can safely remove it and continue with the other folders.
-	workdir = strings.TrimPrefix(workdir, homedir)
-
-	if workdir == "" {
-		return
-	}
-
-	if workdir == sep {
-		p.AddSegment(u0020+sep+u0020, p.config.CwdFg, p.config.CwdBg)
-		return
-	}
-
-	folders := strings.Split(workdir, sep)
-	ttldirs := len(folders)
-
-	if ttldirs > p.config.CwdN {
-		// Replace parent folders with an ellipsis if the path is too long.
-		folders = append([]string{"", u2026}, folders[ttldirs-p.config.CwdN:]...)
-	}
-
-	// Combine adding a powerline arrow line in between folders.
-	// We start at index one because the first folder is empty.
-	workdir = strings.Join(folders[1:], u0020+uE0B1+u0020)
-
-	p.AddSegment(u0020+workdir+u0020, p.config.CwdFg, p.config.CwdBg)
-}
-
-func (p *Powergoline) DirectoriesReadOnly(homedir string, workdir string) {
-	if p.IsRdonlyDir(workdir) {
-		// Draw lock symbol if the current directory is read-only.
-		p.AddSegment(u0020+uE0A2+u0020, p.config.RodirFg, p.config.RodirBg)
-	}
+// isRdonlyDir checks if a directory is read only by the current user.
+func isRdonlyDir(folder string) bool {
+	return isWritable(folder)
 }
 
 // IsRepoStatusEnabled checks if the current folder excludes repository status.
