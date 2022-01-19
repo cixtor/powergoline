@@ -346,7 +346,7 @@ func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 	workdir = strings.Join(folders[1:], u0020+uE0B1+u0020)
 	out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + workdir + u0020}
 
-	if isRdonlyDir(workdir) {
+	if unix.Access(workdir, unix.W_OK) != nil {
 		// Draw lock symbol if the current directory is read-only.
 		out <- Segment{Index: priority, Show: true, Fg: config.RodirFg, Bg: config.RodirBg, Text: u0020 + uE0A2 + u0020}
 	}
@@ -428,16 +428,6 @@ func colorize(n int) string {
 // AddSegment inserts a new block in the CLI prompt output.
 func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 	p.pieces = append(p.pieces, Segment{Text: s, Fg: fg, Bg: bg})
-}
-
-// isWritable checks if the process can write in a directory.
-func isWritable(folder string) bool {
-	return unix.Access(folder, unix.W_OK) == nil
-}
-
-// isRdonlyDir checks if a directory is read only by the current user.
-func isRdonlyDir(folder string) bool {
-	return isWritable(folder)
 }
 
 // CallPlugins runs all the user defined plugins.
