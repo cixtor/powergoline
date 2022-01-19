@@ -307,6 +307,9 @@ func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, pr
 	out <- Segment{Index: priority, Show: true, Fg: config.HostFg, Bg: config.HostBg, Text: u0020 + "\\h" + u0020}
 }
 
+// SEP is same as os.PathSeparator but as a string.
+const SEP string = "/"
+
 // segmentDirectories prints the current location of the user in the system.
 func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
 	defer wg.Done()
@@ -315,36 +318,50 @@ func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 		out <- Segment{ /* disabled */ }
 		return
 	}
+
 	homedir := os.Getenv("HOME")
 	workdir := os.Getenv("PWD")
-	sep := string(os.PathSeparator)
 
-	if strings.HasPrefix(workdir, homedir) {
+	// start with the entire folder path, then reduce as we remove sections.
+	subfolders := workdir
+
+	// first character in the folder path, e.g. / (forward-slash) or ~ (tilde).
+	root := SEP
+
+	if workdir == SEP {
+		// User is at the root of the file system, so simply print a forward slash.
+		subfolders = ""
+	} else if workdir == homedir {
 		// Add a tilde to represent that we are inside the home directory.
-		out <- Segment{Index: priority, Show: true, Fg: config.HomeFg, Bg: config.HomeBg, Text: u0020 + "~" + u0020}
+		root = "~"
+		subfolders = ""
+	} else if strings.HasPrefix(workdir, homedir) {
+		root = "~"
+		// Remove homedir from workdir and decorate the remaining folder path.
+		subfolders = workdir[len(homedir)+1:]
+	} else {
+		// User is somewhere else in the system outside the $HOME directory.
+		subfolders = subfolders[1:]
 	}
 
-	// Since we already considered the home directory in DirectoriesHome, we do
-	// not need to process that portion of the current working directory again.
-	// We can safely remove it and continue with the other folders.
-	workdir = strings.TrimPrefix(workdir, homedir)
-	if workdir == "" {
-		return
+	out <- Segment{Index: priority, Show: true, Fg: config.HomeFg, Bg: config.HomeBg, Text: u0020 + root + u0020}
+
+	if subfolders != "" {
+		// Plus one to account for the first characters in the entire folder
+		// path that was removed in the conditions leading up to the creation
+		// of the subfolders variable.
+		nSections := strings.Count(subfolders, SEP) + 1
+		if nSections > config.CwdN {
+			// Path too long; replace parent folders with an ellipsis.
+			sections := strings.Split(subfolders, SEP)
+			sections = sections[nSections-config.CwdN : nSections]
+			sections = append([]string{u2026}, sections...)
+			subfolders = strings.Join(sections, SEP)
+		}
+		// Replace all folder separators (forward-slash) with light arrows.
+		subfolders = strings.ReplaceAll(subfolders, SEP, u0020+uE0B1+u0020)
+		out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + subfolders + u0020}
 	}
-	if workdir == sep {
-		out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + sep + u0020}
-		return
-	}
-	folders := strings.Split(workdir, sep)
-	ttldirs := len(folders)
-	if ttldirs > config.CwdN {
-		// Replace parent folders with an ellipsis if the path is too long.
-		folders = append([]string{"", u2026}, folders[ttldirs-config.CwdN:]...)
-	}
-	// Combine adding a powerline arrow line in between folders.
-	// We start at index one because the first folder is empty.
-	workdir = strings.Join(folders[1:], u0020+uE0B1+u0020)
-	out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + workdir + u0020}
 
 	if unix.Access(workdir, unix.W_OK) != nil {
 		// Draw lock symbol if the current directory is read-only.
