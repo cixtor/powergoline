@@ -431,10 +431,25 @@ func segmentCallPlugins(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 	}
 }
 
-func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config, command Plugin) {
+func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config, cmd Plugin) {
 	defer wg.Done()
 	defer func() { <-sem }()
-	out <- Segment{Index: priority, Text: "segmentCallOnePlugin " + command.Name, Show: true}
+	start := time.Now()
+	output, err := call(config.PluginTimeout, cmd.Name, cmd.Args...)
+	runtime := time.Since(start)
+	if config.Debug {
+		fmt.Printf("%s ran in %s\n", cmd.Name, runtime)
+	}
+	if errors.Is(err, errEmptyOutput) {
+		// hide as there is no output to show.
+		out <- Segment{Index: priority, Show: false}
+		return
+	}
+	if err != nil {
+		// use error message instead.
+		output = []byte(err.Error())
+	}
+	out <- Segment{Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
 }
 
 func segmentPromptSymbol(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ uint, config Config) {
@@ -450,72 +465,6 @@ func colorize(n int) string {
 // AddSegment inserts a new block in the CLI prompt output.
 func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 	p.pieces = append(p.pieces, Segment{Text: s, Fg: fg, Bg: bg})
-}
-
-// CallPlugins runs all the user defined plugins.
-func (p *Powergoline) CallPlugins() {
-	sem := make(chan bool, 20)
-	total := len(p.config.Plugins)
-	output := make(chan PluginOutput)
-	bucket := make([]PluginOutput, total)
-
-	for index, metadata := range p.config.Plugins {
-		go p.ExecutePlugin(sem, output, index, metadata)
-	}
-
-	var pout PluginOutput
-
-	for i := 0; i < total; i++ {
-		pout = <-output
-		bucket[pout.Index] = pout
-	}
-
-	allOutputs := []string{}
-
-	for i := 0; i < total; i++ {
-		if p.config.Debug {
-			fmt.Printf("%s took %s\n", p.config.Plugins[i].Name, bucket[i].Runtime)
-		}
-
-		if bucket[i].Output == "" {
-			continue
-		}
-
-		allOutputs = append(allOutputs, bucket[i].Output)
-	}
-
-	if len(allOutputs) == 0 {
-		return
-	}
-
-	outSeq := strings.Join(allOutputs, u0020+uE0B1+u0020)
-	p.AddSegment(u0020+outSeq+u0020, p.config.PluginFg, p.config.PluginBg)
-}
-
-// ExecutePlugin runs an user defined external command.
-func (p *Powergoline) ExecutePlugin(sem chan bool, out chan PluginOutput, index int, addon Plugin) {
-	sem <- true /* block */
-	defer func() { <-sem }()
-
-	start := time.Now()
-	output, err := call(p.config.PluginTimeout, addon.Name, addon.Args...)
-	runtime := time.Since(start)
-
-	if errors.Is(err, errEmptyOutput) {
-		out <- PluginOutput{Index: index, Runtime: runtime}
-		return
-	}
-
-	if err != nil {
-		/* use error message instead */
-		output = []byte(err.Error())
-	}
-
-	out <- PluginOutput{
-		Output:  string(output),
-		Index:   index,
-		Runtime: runtime,
-	}
 }
 
 // RootSymbol defines a segment with an indicator for root users.
@@ -565,7 +514,7 @@ func (p *Powergoline) RootSymbol() {
 	p.AddSegment(u0020+symbol+u0020, p.config.StatusFg, color)
 }
 
-// runcmd executes an external command and returns the output.
+// call executes an external command and returns the output.
 func call(timeout time.Duration, name string, arg ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
