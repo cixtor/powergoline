@@ -319,6 +319,11 @@ func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 		return
 	}
 
+	// Do not use os.UserHomeDir() and os.Getwd() as they resolve the path on
+	// disk and may expand symbolic links or return an absolute path different
+	// from what the user typed. We need the shell-exported HOME and PWD so the
+	// prompt matches the exact working directory shown by the shell (including
+	// symlinks and automount views) when composing PS1.
 	homedir := os.Getenv("HOME")
 	workdir := os.Getenv("PWD")
 
