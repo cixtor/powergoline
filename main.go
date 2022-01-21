@@ -452,12 +452,6 @@ func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segmen
 	out <- Segment{Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
 }
 
-func segmentPromptSymbol(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ uint, config Config) {
-	defer wg.Done()
-	defer func() { <-sem }()
-	out <- Segment{Index: 999999, Text: "segmentPromptSymbol", Show: true}
-}
-
 func colorize(n int) string {
 	return fmt.Sprintf("%03d", n)
 }
@@ -467,7 +461,7 @@ func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 	p.pieces = append(p.pieces, Segment{Text: s, Fg: fg, Bg: bg})
 }
 
-// RootSymbol defines a segment with an indicator for root users.
+// segmentPromptSymbol prints an indicator for root users.
 //
 // System status codes:
 //
@@ -480,38 +474,37 @@ func (p *Powergoline) AddSegment(s string, fg int, bg int) {
 //	> 128+n - Fatal error signal where "n" is the PID.
 //	> 130   - Script terminated by Control-C.
 //	> 255*  - Exit status out of range.
-func (p *Powergoline) RootSymbol() {
+func segmentPromptSymbol(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ uint, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
 	var color int
 	var symbol string
-	status := p.config.StatusCode
-
+	status := config.StatusCode
 	if os.Getuid() == 0 {
-		symbol = p.config.SymbolRoot
+		symbol = config.SymbolRoot
 	} else {
-		symbol = p.config.SymbolUser
+		symbol = config.SymbolUser
 	}
-
 	if status == 0 {
-		color = p.config.StatusSuccess
+		color = config.StatusSuccess
 	} else if status == 1 {
-		color = p.config.StatusError
+		color = config.StatusError
 	} else if status == 2 {
-		color = p.config.StatusMisuse
+		color = config.StatusMisuse
 	} else if status == 126 {
-		color = p.config.StatusCantExec
+		color = config.StatusCantExec
 	} else if status == 127 {
-		color = p.config.StatusNotFound
+		color = config.StatusNotFound
 	} else if status == 128 {
-		color = p.config.StatusInvalid
+		color = config.StatusInvalid
 	} else if status > 128 && status != 130 && status < 255 {
-		color = p.config.StatusErrSignal
+		color = config.StatusErrSignal
 	} else if status == 130 {
-		color = p.config.StatusTerminated
+		color = config.StatusTerminated
 	} else {
-		color = p.config.StatusOutofrange
+		color = config.StatusOutofrange
 	}
-
-	p.AddSegment(u0020+symbol+u0020, p.config.StatusFg, color)
+	out <- Segment{Index: 9999, Show: true, Fg: config.StatusFg, Bg: color, Text: u0020 + symbol + u0020}
 }
 
 // call executes an external command and returns the output.
