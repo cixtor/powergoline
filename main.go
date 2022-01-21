@@ -257,8 +257,8 @@ func printAllSegments(w io.Writer, segments []Segment) (int, error) {
 
 func printOneSegment(w io.Writer, seg Segment) (int, error) {
 	var color string
-	fore := colorize(seg.Fg)
-	back := colorize(seg.Bg)
+	fore := fmt.Sprintf("%03d", seg.Fg)
+	back := fmt.Sprintf("%03d", seg.Bg)
 	// Add the foreground and background colors.
 	if seg.Fg > -1 && seg.Bg > -1 {
 		color += "38;5;" + fore + ";" + "48;5;" + back
@@ -450,10 +450,6 @@ func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segmen
 		output = []byte(err.Error())
 	}
 	out <- Segment{Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
-}
-
-func colorize(n int) string {
-	return fmt.Sprintf("%03d", n)
 }
 
 // AddSegment inserts a new block in the CLI prompt output.
