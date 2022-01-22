@@ -108,7 +108,8 @@ func main() {
 		segmentDirectories,
 		segmentRepoStatus,
 		segmentCallPlugins,
-		segmentPromptSymbol,
+		segmentExitCode,
+		segmentInputSeparator,
 	})
 }
 
@@ -122,6 +123,19 @@ const (
 	uE0A2 string = "\uE0A2" // uE0A2 is Unicode for `` (GitHub lock symbol).
 	uE0B0 string = "\uE0B0" // uE0B0 is Unicode for `` (powerline arrow body).
 	uE0B1 string = "\uE0B1" // uE0B1 is Unicode for `` (powerline arrow line).
+)
+
+type SegmentKind int
+
+const (
+	TextBox SegmentKind = iota
+	FolderBox
+	ArrowBox
+	LockBox
+	RepoStatusBox
+	PluginBox
+	ExitCodeBox
+	LastBox
 )
 
 // errEmptyOutput defines an error when executing a command with no output.
@@ -141,11 +155,12 @@ type Powergoline struct {
 // Notice that most segments have a spacing on the left and right side to keep
 // things in shape.
 type Segment struct {
-	Index uint   // order in which to render.
-	Show  bool   // render if true, hide if false.
-	Fg    int    // foreground color.
-	Bg    int    // background color.
-	Text  string // text to render.
+	Kind  SegmentKind // type of box that the segment represents.
+	Index int         // order in which to render.
+	Show  bool        // render if true, hide if false.
+	Fg    int         // foreground color.
+	Bg    int         // background color.
+	Text  string      // text to render.
 }
 
 // PluginOutput struct represents the output of an external program after its
@@ -187,7 +202,7 @@ func NewPowergoline(config Config) *Powergoline {
 	return &Powergoline{config: config}
 }
 
-type SegmentFunc func(*sync.WaitGroup, chan struct{}, chan Segment, uint, Config)
+type SegmentFunc func(*sync.WaitGroup, chan struct{}, chan Segment, int, Config)
 
 func (p *Powergoline) Render(w io.Writer, arr []SegmentFunc) {
 	var wg sync.WaitGroup
@@ -198,7 +213,10 @@ func (p *Powergoline) Render(w io.Writer, arr []SegmentFunc) {
 	for priority, fn := range arr {
 		wg.Add(1)
 		sem <- struct{}{ /* lock */ }
-		go fn(&wg, sem, out, uint(priority), p.config)
+		// Multiply priority by ten to create a buffer in between segments in
+		// case the program needs to add additional (virtual) segments like
+		// arrows or indicators after the explicit segment.
+		go fn(&wg, sem, out, priority*10, p.config)
 	}
 	wg.Wait()
 	close(sem)
@@ -209,53 +227,53 @@ func (p *Powergoline) Render(w io.Writer, arr []SegmentFunc) {
 func consumer(w io.Writer, done chan struct{}, out chan Segment) {
 	defer close(done)
 	var segments []Segment
-	for item := range out {
-		segments = append(segments, item)
-	}
-	sort.Slice(segments, func(i, j int) bool {
-		return segments[i].Index < segments[j].Index
-	})
-	_, _ = printAllSegments(w, segments)
-}
-
-func printAllSegments(w io.Writer, segments []Segment) (int, error) {
-	n := len(segments)
-	for i, section := range segments {
-		if section.Text == "" {
+	for box := range out {
+		if !box.Show || box.Text == "" {
+			// Skip unnecessary segments.
 			continue
 		}
 		// Prevent arbitrary code execution in subshell expressions.
-		section.Text = strings.ReplaceAll(section.Text, "$", "\\$")
-		section.Text = strings.ReplaceAll(section.Text, "`", "\\`")
-		if _, err := printOneSegment(w, section); err != nil {
-			return 0, err
-		}
-		// If the segment is an arrow, then we will assume that both Fg and Bg
-		// are "auto", which means we must select the corresponding colors from
-		// the adjacent segments.
+		box.Text = strings.ReplaceAll(box.Text, "$", "\\$")
+		box.Text = strings.ReplaceAll(box.Text, "`", "\\`")
+		segments = append(segments, box)
+		// Add an arrow pointing to the next segment; set colors later.
 		//
-		// The foreground color must be background of the left segment.
-		//
-		// The background color must be background of the right segment.
-		//
-		// ┌───┬───┬─────┬───┬─────────────┬───┬─────────────┬───┬───┬───┐
-		// │ ~ │ > │ ... │ > │ powergoline │ > │ hello world │ > │ $ │ > │
-		// └───┴───┴─────┴───┴─────────────┴───┴─────────────┴───┴───┴───┘
-		//       ▲         ▲                 ▲                 ▲       ▲
-		//       │         │                 │                 │       │
-		//     arrow     arrow             arrow             arrow   arrow
-		arrow := Segment{Text: uE0B0, Fg: section.Bg, Bg: -1}
-		if i+1 < n {
-			arrow.Bg = segments[i+1].Bg
-		}
-		if _, err := printOneSegment(w, arrow); err != nil {
-			return 0, err
+		// ┌───┬───┬─────┬───┬─────────────┬───┬────────┬───┬───┬───┬───┐
+		// │ ~ │ > │ ... │ > │ powergoline │ > │ foobar │ > │ $ │ > │   │
+		// └───┴───┴─────┴───┴─────────────┴───┴────────┴───┴───┴───┴───┘
+		//       ▲         ▲                 ▲            ▲       ▲   ▲
+		//       │         │                 │            │       │   │
+		//     arrow     arrow             arrow        arrow   arrow empty
+		arrow := Segment{Kind: ArrowBox, Index: box.Index + 1, Text: uE0B0}
+		segments = append(segments, arrow)
+	}
+	// Sort segments based on their original priority.
+	sort.Slice(segments, func(i, j int) bool {
+		return segments[i].Index < segments[j].Index
+	})
+	// Once sorted, check the list again and, if the segment is an arrow, then
+	// set the correct foreground and background colors. Foreground color must
+	// be the background color of the previous segment. Background color must
+	// be the background color of the next segment, if exists.
+	for i := 1; i+1 < len(segments); i += 2 {
+		if segments[i].Kind == ArrowBox {
+			segments[i].Fg = segments[i-1].Bg
+			segments[i].Bg = segments[i+1].Bg
+			// Replace type of arrow if between plugin outputs.
+			if segments[i-1].Kind == PluginBox && segments[i+1].Kind == PluginBox {
+				segments[i].Fg = -1
+				segments[i].Text = uE0B1
+			}
 		}
 	}
-	return fmt.Fprint(w, u0020+u000A)
+	for _, box := range segments {
+		if box.Show || box.Kind == ArrowBox {
+			printOneSegment(w, box)
+		}
+	}
 }
 
-func printOneSegment(w io.Writer, seg Segment) (int, error) {
+func printOneSegment(w io.Writer, seg Segment) {
 	var color string
 	fore := fmt.Sprintf("%03d", seg.Fg)
 	back := fmt.Sprintf("%03d", seg.Bg)
@@ -269,53 +287,50 @@ func printOneSegment(w io.Writer, seg Segment) (int, error) {
 	}
 	// Draw the color sequences if necessary.
 	if len(color) > 0 {
-		return fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.Text+"\\[\\e[0m\\]")
+		fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.Text+"\\[\\e[0m\\]")
+	} else {
+		fmt.Fprint(w, seg.Text)
 	}
-	return fmt.Fprint(w, seg.Text)
 }
 
 // segmentDatetime prints the current date and time.
-func segmentDatetime(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+func segmentDatetime(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	if !config.TimeOn {
-		out <- Segment{ /* disabled */ }
 		return
 	}
-	out <- Segment{Index: priority, Show: true, Fg: config.TimeFg, Bg: config.TimeBg, Text: u0020 + time.Now().Format(config.TimeFmt) + u0020}
+	out <- Segment{Kind: TextBox, Index: priority, Show: true, Fg: config.TimeFg, Bg: config.TimeBg, Text: u0020 + time.Now().Format(config.TimeFmt) + u0020}
 }
 
 // segmentUsername prints the name of the current system user, e.g. root.
-func segmentUsername(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+func segmentUsername(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	if !config.UserOn {
-		out <- Segment{ /* disabled */ }
 		return
 	}
-	out <- Segment{Index: priority, Show: true, Fg: config.UserFg, Bg: config.UserBg, Text: u0020 + "\\u" + u0020}
+	out <- Segment{Kind: TextBox, Index: priority, Show: true, Fg: config.UserFg, Bg: config.UserBg, Text: u0020 + "\\u" + u0020}
 }
 
 // segmentHostname prints the name of this system.
-func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+func segmentHostname(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	if !config.HostOn {
-		out <- Segment{ /* disabled */ }
 		return
 	}
-	out <- Segment{Index: priority, Show: true, Fg: config.HostFg, Bg: config.HostBg, Text: u0020 + "\\h" + u0020}
+	out <- Segment{Kind: TextBox, Index: priority, Show: true, Fg: config.HostFg, Bg: config.HostBg, Text: u0020 + "\\h" + u0020}
 }
 
 // SEP is same as os.PathSeparator but as a string.
 const SEP string = "/"
 
 // segmentDirectories prints the current location of the user in the system.
-func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	if !config.CwdOn {
-		out <- Segment{ /* disabled */ }
 		return
 	}
 
@@ -349,7 +364,7 @@ func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 		subfolders = subfolders[1:]
 	}
 
-	out <- Segment{Index: priority, Show: true, Fg: config.HomeFg, Bg: config.HomeBg, Text: u0020 + root + u0020}
+	out <- Segment{Kind: FolderBox, Index: priority, Show: true, Fg: config.HomeFg, Bg: config.HomeBg, Text: u0020 + root + u0020}
 
 	if subfolders != "" {
 		// Plus one to account for the first characters in the entire folder
@@ -365,21 +380,21 @@ func segmentDirectories(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 		}
 		// Replace all folder separators (forward-slash) with light arrows.
 		subfolders = strings.ReplaceAll(subfolders, SEP, u0020+uE0B1+u0020)
-		out <- Segment{Index: priority, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + subfolders + u0020}
+		out <- Segment{Kind: LockBox, Index: priority + 2, Show: true, Fg: config.CwdFg, Bg: config.CwdBg, Text: u0020 + subfolders + u0020}
 	}
 
 	if unix.Access(workdir, unix.W_OK) != nil {
 		// Draw lock symbol if the current directory is read-only.
-		out <- Segment{Index: priority, Show: true, Fg: config.RodirFg, Bg: config.RodirBg, Text: u0020 + uE0A2 + u0020}
+		out <- Segment{Kind: FolderBox, Index: priority + 4, Show: true, Fg: config.RodirFg, Bg: config.RodirBg, Text: u0020 + uE0A2 + u0020}
 	}
 }
 
 // segmentRepoStatus prints the status of the current version control system.
-func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	if !config.RepoOn || slices.Contains(config.RepoExclude, os.Getenv("PWD")) {
-		out <- Segment{ /* disabled globally or per-{git,hg}-repository */ }
+		// Disabled globally or per-{git,hg}-repository.
 		return
 	}
 	var err error
@@ -392,12 +407,11 @@ func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, 
 		status, stderr = repoStatusMercurial()
 	}
 	if stderr != nil {
-		out <- Segment{Index: priority, Show: true, Text: "hgrepo " + err.Error()}
+		out <- Segment{Kind: RepoStatusBox, Index: priority, Show: true, Text: "hgrepo " + err.Error()}
 		return
 	}
 	if len(status.Branch) == 0 {
 		// hide as there is no information to show.
-		out <- Segment{Index: priority, Show: false}
 		return
 	}
 	var buf bytes.Buffer
@@ -418,20 +432,20 @@ func segmentRepoStatus(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, 
 		fmt.Fprintf(&buf, " -%d", status.Deleted)
 	}
 	fmt.Fprint(&buf, " ")
-	out <- Segment{Index: priority, Show: true, Fg: config.RepoFg, Bg: config.RepoBg, Text: buf.String()}
+	out <- Segment{Kind: RepoStatusBox, Index: priority, Show: true, Fg: config.RepoFg, Bg: config.RepoBg, Text: buf.String()}
 }
 
-func segmentCallPlugins(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config) {
+func segmentCallPlugins(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	for i, command := range config.Plugins {
 		wg.Add(1)
 		sem <- struct{}{ /* lock */ }
-		go segmentCallOnePlugin(wg, sem, out, uint(i+100), config, command)
+		go segmentCallOnePlugin(wg, sem, out, i+101, config, command)
 	}
 }
 
-func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority uint, config Config, cmd Plugin) {
+func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, priority int, config Config, cmd Plugin) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	start := time.Now()
@@ -442,17 +456,17 @@ func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segmen
 	}
 	if errors.Is(err, errEmptyOutput) {
 		// hide as there is no output to show.
-		out <- Segment{Index: priority, Show: false}
+		out <- Segment{Kind: PluginBox, Index: priority, Show: false}
 		return
 	}
 	if err != nil {
 		// use error message instead.
 		output = []byte(err.Error())
 	}
-	out <- Segment{Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
+	out <- Segment{Kind: PluginBox, Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
 }
 
-// segmentPromptSymbol prints an indicator for root users.
+// segmentExitCode prints an indicator for root users.
 //
 // System status codes:
 //
@@ -465,7 +479,7 @@ func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segmen
 //	> 128+n - Fatal error signal where "n" is the PID.
 //	> 130   - Script terminated by Control-C.
 //	> 255*  - Exit status out of range.
-func segmentPromptSymbol(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ uint, config Config) {
+func segmentExitCode(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ int, config Config) {
 	defer wg.Done()
 	defer func() { <-sem }()
 	var color int
@@ -495,7 +509,17 @@ func segmentPromptSymbol(wg *sync.WaitGroup, sem chan struct{}, out chan Segment
 	} else {
 		color = config.StatusOutofrange
 	}
-	out <- Segment{Index: 9999, Show: true, Fg: config.StatusFg, Bg: color, Text: u0020 + symbol + u0020}
+	out <- Segment{Kind: ExitCodeBox, Index: 9999, Show: true, Fg: config.StatusFg, Bg: color, Text: u0020 + symbol + u0020}
+}
+
+func segmentInputSeparator(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ int, config Config) {
+	defer wg.Done()
+	defer func() { <-sem }()
+	// Add a whitespace at the end to separate the prompt from the user input.
+	// This also guarantees the correct background color for the immediately
+	// previous arrow segment, otherwise, the program panics with an index out
+	// of bounds error.
+	out <- Segment{Kind: LastBox, Index: 10000, Show: true, Fg: -1, Bg: -1, Text: u0020 /*+u000A*/}
 }
 
 // call executes an external command and returns the output.
