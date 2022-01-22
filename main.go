@@ -452,11 +452,6 @@ func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segmen
 	out <- Segment{Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
 }
 
-// AddSegment inserts a new block in the CLI prompt output.
-func (p *Powergoline) AddSegment(s string, fg int, bg int) {
-	p.pieces = append(p.pieces, Segment{Text: s, Fg: fg, Bg: bg})
-}
-
 // segmentPromptSymbol prints an indicator for root users.
 //
 // System status codes:
