@@ -109,7 +109,6 @@ func main() {
 		segmentRepoStatus,
 		segmentCallPlugins,
 		segmentExitCode,
-		segmentInputSeparator,
 	})
 }
 
@@ -135,7 +134,6 @@ const (
 	RepoStatusBox
 	PluginBox
 	ExitCodeBox
-	LastBox
 )
 
 // errEmptyOutput defines an error when executing a command with no output.
@@ -255,14 +253,19 @@ func consumer(w io.Writer, done chan struct{}, out chan Segment) {
 	// set the correct foreground and background colors. Foreground color must
 	// be the background color of the previous segment. Background color must
 	// be the background color of the next segment, if exists.
-	for i := 1; i+1 < len(segments); i += 2 {
+	n := len(segments)
+	for i := 0; i < n; i++ {
 		if segments[i].Kind == ArrowBox {
 			segments[i].Fg = segments[i-1].Bg
-			segments[i].Bg = segments[i+1].Bg
+			segments[i].Bg = -1 /* default: no color */
 			// Replace type of arrow if between plugin outputs.
 			if segments[i-1].Kind == PluginBox && segments[i+1].Kind == PluginBox {
 				segments[i].Fg = -1
 				segments[i].Text = uE0B1
+			}
+			// Set the background color, if there is a next box.
+			if i+1 < n {
+				segments[i].Bg = segments[i+1].Bg
 			}
 		}
 	}
@@ -271,6 +274,7 @@ func consumer(w io.Writer, done chan struct{}, out chan Segment) {
 			printOneSegment(w, box)
 		}
 	}
+	fmt.Fprint(w, u0020)
 }
 
 func printOneSegment(w io.Writer, seg Segment) {
@@ -510,16 +514,6 @@ func segmentExitCode(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ 
 		color = config.StatusOutofrange
 	}
 	out <- Segment{Kind: ExitCodeBox, Index: 9999, Show: true, Fg: config.StatusFg, Bg: color, Text: u0020 + symbol + u0020}
-}
-
-func segmentInputSeparator(wg *sync.WaitGroup, sem chan struct{}, out chan Segment, _ int, config Config) {
-	defer wg.Done()
-	defer func() { <-sem }()
-	// Add a whitespace at the end to separate the prompt from the user input.
-	// This also guarantees the correct background color for the immediately
-	// previous arrow segment, otherwise, the program panics with an index out
-	// of bounds error.
-	out <- Segment{Kind: LastBox, Index: 10000, Show: true, Fg: -1, Bg: -1, Text: u0020 /*+u000A*/}
 }
 
 // call executes an external command and returns the output.
