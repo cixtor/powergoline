@@ -445,7 +445,7 @@ func segmentCallPlugins(wg *sync.WaitGroup, sem chan struct{}, out chan Segment,
 	for i, command := range config.Plugins {
 		wg.Add(1)
 		sem <- struct{}{ /* lock */ }
-		go segmentCallOnePlugin(wg, sem, out, i+101, config, command)
+		go segmentCallOnePlugin(wg, sem, out, i*2+100, config, command)
 	}
 }
 
