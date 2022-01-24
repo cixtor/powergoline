@@ -182,7 +182,7 @@ func compareRootSymbol(t *testing.T, status int, color string) {
 	b := []byte("m\\] r \\[\\e[0m\\]\\[\\e[38;5;")
 	c := []byte("m\\]\ue0b0\\[\\e[0m\\] \n")
 
-	p := NewPowergoline(Config{
+	NewPowergoline(Config{
 		SymbolUser:       "r",
 		SymbolRoot:       "s",
 		StatusCode:       status,
@@ -195,13 +195,9 @@ func compareRootSymbol(t *testing.T, status int, color string) {
 		StatusErrSignal:  333,
 		StatusTerminated: 130,
 		StatusOutofrange: 999,
-	})
+	}).Render(&buf, []SegmentFunc{segmentExitCode})
 
 	var expected []byte
-
-	p.RootSymbol()
-	p.PrintSegments(&buf)
-
 	expected = append(expected, a...)
 	expected = append(expected, []byte(color)...)
 	expected = append(expected, b...)
