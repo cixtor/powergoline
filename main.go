@@ -467,6 +467,8 @@ func segmentCallOnePlugin(wg *sync.WaitGroup, sem chan struct{}, out chan Segmen
 		// use error message instead.
 		output = []byte(err.Error())
 	}
+	// Represent new lines with more obvious characters.
+	output = bytes.ReplaceAll(output, []byte("\n"), []byte("\u2424"))
 	out <- Segment{Kind: PluginBox, Index: priority, Show: true, Fg: config.PluginFg, Bg: config.PluginBg, Text: u0020 + string(output) + u0020}
 }
 
