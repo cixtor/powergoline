@@ -259,7 +259,10 @@ func consumer(w io.Writer, done chan struct{}, out chan Segment) {
 			segments[i].Fg = segments[i-1].Bg
 			segments[i].Bg = -1 /* default: no color */
 			// Replace type of arrow if between plugin outputs.
-			if segments[i-1].Kind == PluginBox && segments[i+1].Kind == PluginBox {
+			if i-1 >= 0 /* check if a previous box exists */ &&
+				i+1 < n /* check if a next box exists */ &&
+				segments[i-1].Kind == PluginBox &&
+				segments[i+1].Kind == PluginBox {
 				segments[i].Fg = -1
 				segments[i].Text = uE0B1
 			}

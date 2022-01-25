@@ -299,7 +299,7 @@ func BenchmarkCallPlugins(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NewPowergoline(Config{
 			Plugins: []Plugin{
-				{Name: "echo"},
+				{Name: "echo", Args: []string{"hello"}},
 			},
 		}).Render(&buf, []SegmentFunc{
 			segmentCallPlugins,
