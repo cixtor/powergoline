@@ -175,12 +175,12 @@ func TestStatusGitNoOrigin(t *testing.T) {
 	})
 }
 
-func compareRootSymbol(t *testing.T, status int, color string) {
+func compareExitCode(t *testing.T, status int, color string) {
 	var buf bytes.Buffer
 
 	a := []byte("\\[\\e[38;5;000;48;5;")
 	b := []byte("m\\] r \\[\\e[0m\\]\\[\\e[38;5;")
-	c := []byte("m\\]\ue0b0\\[\\e[0m\\] \n")
+	c := []byte("m\\]\ue0b0\\[\\e[0m\\] ")
 
 	NewPowergoline(Config{
 		SymbolUser:       "r",
@@ -205,41 +205,40 @@ func compareRootSymbol(t *testing.T, status int, color string) {
 	expected = append(expected, c...)
 
 	if !bytes.Equal(buf.Bytes(), expected) {
-		t.Fatalf("invalid root symbol output:\nExpected: `%q`\nActual:   `%q`", buf.Bytes(), expected)
+		t.Fatalf("invalid exit code output:\nExpected: `%q`\nActual:   `%q`", buf.Bytes(), expected)
 	}
 }
 
-func TestRootSymbol(t *testing.T) {
+func TestExitCode(t *testing.T) {
 	testCases := []struct {
 		Name   string
 		Status int
 		Color  string
 	}{
-		{Name: "RootSymbol000", Status: 0, Color: "000"},
-		{Name: "RootSymbol111", Status: 1, Color: "111"},
-		{Name: "RootSymbol222", Status: 2, Color: "222"},
-		{Name: "RootSymbol126", Status: 126, Color: "126"},
-		{Name: "RootSymbol127", Status: 127, Color: "127"},
-		{Name: "RootSymbol128", Status: 128, Color: "128"},
-		{Name: "RootSymbol129", Status: 129, Color: "333"},
-		{Name: "RootSymbol130", Status: 130, Color: "130"},
-		{Name: "RootSymbol133", Status: 133, Color: "333"},
-		{Name: "RootSymbol256", Status: 256, Color: "999"},
-		{Name: "RootSymbolABC", Status: 300, Color: "999"},
+		{Name: "ExitCode000", Status: 0, Color: "000"},
+		{Name: "ExitCode111", Status: 1, Color: "111"},
+		{Name: "ExitCode222", Status: 2, Color: "222"},
+		{Name: "ExitCode126", Status: 126, Color: "126"},
+		{Name: "ExitCode127", Status: 127, Color: "127"},
+		{Name: "ExitCode128", Status: 128, Color: "128"},
+		{Name: "ExitCode129", Status: 129, Color: "333"},
+		{Name: "ExitCode130", Status: 130, Color: "130"},
+		{Name: "ExitCode133", Status: 133, Color: "333"},
+		{Name: "ExitCode256", Status: 256, Color: "999"},
+		{Name: "ExitCodeABC", Status: 300, Color: "999"},
 	}
 
 	for _, tx := range testCases {
 		t.Run(tx.Name, func(t *testing.T) {
-			compareRootSymbol(t, tx.Status, tx.Color)
+			compareExitCode(t, tx.Status, tx.Color)
 		})
 	}
 }
 
 func BenchmarkAll(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{
+		NewPowergoline(Config{
 			TimeOn:     true,
 			UserOn:     true,
 			HostOn:     true,
@@ -247,67 +246,50 @@ func BenchmarkAll(b *testing.B) {
 			RepoOn:     true,
 			Plugins:    []Plugin{{Name: "echo"}},
 			StatusCode: 0,
+		}).Render(&buf, []SegmentFunc{
+			segmentDatetime,
+			segmentUsername,
+			segmentHostname,
+			segmentDirectories,
+			segmentRepoStatus,
+			segmentCallPlugins,
+			segmentExitCode,
 		})
-
-		p.Datetime()
-		p.Username()
-		p.Hostname()
-		p.Directories()
-		p.RepoStatus()
-		p.CallPlugins()
-		p.RootSymbol()
-
-		p.PrintSegments(&buf)
 	}
 }
 
 func BenchmarkDatetime(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{TimeOn: true})
-		p.Datetime()
-		p.PrintSegments(&buf)
+		NewPowergoline(Config{TimeOn: true}).Render(&buf, []SegmentFunc{segmentDatetime})
 	}
 }
 
 func BenchmarkUsername(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{UserOn: true})
-		p.Username()
-		p.PrintSegments(&buf)
+		NewPowergoline(Config{UserOn: true}).Render(&buf, []SegmentFunc{segmentUsername})
 	}
 }
 
 func BenchmarkHostname(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{HostOn: true})
-		p.Hostname()
-		p.PrintSegments(&buf)
+		NewPowergoline(Config{HostOn: true}).Render(&buf, []SegmentFunc{segmentHostname})
 	}
 }
 
 func BenchmarkDirectories(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{CwdN: 3})
-		p.Directories()
-		p.PrintSegments(&buf)
+		NewPowergoline(Config{CwdN: 3}).Render(&buf, []SegmentFunc{segmentDirectories})
 	}
 }
 
 func BenchmarkRepoStatus(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{RepoOn: true})
-		p.RepoStatus()
-		p.PrintSegments(&buf)
+		NewPowergoline(Config{RepoOn: true}).Render(&buf, []SegmentFunc{segmentRepoStatus})
 	}
 }
 
@@ -315,22 +297,19 @@ func BenchmarkCallPlugins(b *testing.B) {
 	var buf bytes.Buffer
 
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{
+		NewPowergoline(Config{
 			Plugins: []Plugin{
 				{Name: "echo"},
 			},
+		}).Render(&buf, []SegmentFunc{
+			segmentCallPlugins,
 		})
-		p.CallPlugins()
-		p.PrintSegments(&buf)
 	}
 }
 
-func BenchmarkRootSymbol(b *testing.B) {
+func BenchmarkExitCode(b *testing.B) {
 	var buf bytes.Buffer
-
 	for i := 0; i < b.N; i++ {
-		p := NewPowergoline(Config{StatusCode: 0})
-		p.RootSymbol()
-		p.PrintSegments(&buf)
+		NewPowergoline(Config{StatusCode: 0}).Render(&buf, []SegmentFunc{segmentExitCode})
 	}
 }
