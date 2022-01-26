@@ -97,7 +97,7 @@ func main() {
 	flag.IntVar(&config.StatusErrSignal, "status.errsignal", 8, "Defines the background color for exit(128+n)\nFatal error signal where \"n\" is the PID.")
 	flag.IntVar(&config.StatusTerminated, "status.terminated", 13, "Defines the background color for exit(130)\nScript terminated by Control-C.")
 	flag.IntVar(&config.StatusOutofrange, "status.outofrange", 0, "Defines the background color for exit(255*)\nExit status out of range.")
-	flag.StringVar(&config.Theme, "theme", "", "Automatic configuration based on a predefined color scheme")
+	flag.StringVar(&config.Theme, "theme", "", "Automatic color selection based on a color scheme.\nChoose among these predefined color schemes: \n* agnoster\n* astrocom\n* bluescale\n* colorish\n* grayscale\n* wildcherry")
 
 	flag.Parse()
 
