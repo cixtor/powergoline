@@ -144,7 +144,6 @@ var errEmptyOutput = errors.New("empty output")
 // It also holds the bytes that will be printed in the command line prompt in
 // the form of segments.
 type Powergoline struct {
-	pieces []Segment
 	config Config
 }
 
@@ -277,7 +276,7 @@ func consumer(w io.Writer, done chan struct{}, out chan Segment) {
 			printOneSegment(w, box)
 		}
 	}
-	fmt.Fprint(w, u0020)
+	_, _ = fmt.Fprint(w, u0020)
 }
 
 func printOneSegment(w io.Writer, seg Segment) {
@@ -294,9 +293,9 @@ func printOneSegment(w io.Writer, seg Segment) {
 	}
 	// Draw the color sequences if necessary.
 	if len(color) > 0 {
-		fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.Text+"\\[\\e[0m\\]")
+		_, _ = fmt.Fprint(w, "\\[\\e["+color+"m\\]"+seg.Text+"\\[\\e[0m\\]")
 	} else {
-		fmt.Fprint(w, seg.Text)
+		_, _ = fmt.Fprint(w, seg.Text)
 	}
 }
 
