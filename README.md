@@ -5,17 +5,16 @@ A lightweight status line for your terminal emulator. This project aims to be a 
 ## Installation
 
 1. Install a patched monospace font [from here](https://github.com/powerline/fonts)
-1. `go get -u github.com/cixtor/powergoline`
-1. Test using this command: `command powergoline`
+1. `go install github.com/cixtor/powergoline@latest`
 1. Add this function to your `.bashrc` configuration
-
-```sh
-function set_prompt_command() {
-  RESULT=$(powergoline -theme="wildcherry" -status.code="$?")
-  export PS1="$RESULT"
-}
-export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
-```
+   ```sh
+   function set_prompt_command() {
+     RESULT=$(powergoline -theme="wildcherry" -status.code="$?")
+     export PS1="$RESULT"
+   }
+   export PROMPT_COMMAND="set_prompt_command; $PROMPT_COMMAND"
+   ```
+1. Restart your terminal emulator.
 
 ![powergoline](screenshot.png)
 
