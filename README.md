@@ -43,8 +43,8 @@ Average performance with the default features:
 ```sh
 $ hyperfine --shell=none 'powergoline'
 Benchmark 1: powergoline
-  Time (mean ± σ):       4.3 ms ±   0.8 ms    [User: 1.4 ms, System: 1.3 ms]
-  Range (min … max):     3.7 ms …  11.9 ms    597 runs
+  Time (mean ± σ):      21.1 ms ±   3.8 ms    [User: 8.5 ms, System: 9.6 ms]
+  Range (min … max):    15.8 ms …  33.4 ms    109 runs
 ```
 
 Average performance with the most basic features enabled:
@@ -52,17 +52,8 @@ Average performance with the most basic features enabled:
 ```sh
 $ hyperfine --shell=none 'powergoline ...'
 Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -status.code=0
-  Time (mean ± σ):       4.3 ms ±   0.5 ms    [User: 1.5 ms, System: 1.3 ms]
-  Range (min … max):     3.8 ms …   7.1 ms    545 runs
-```
-
-Average performance with the plugin system enabled:
-
-```sh
-$ hyperfine --shell=none 'powergoline ...'
-Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -plugin="echo hello" -status.code=0
-  Time (mean ± σ):       6.8 ms ±   1.0 ms    [User: 2.4 ms, System: 3.1 ms]
-  Range (min … max):     5.8 ms …  12.0 ms    261 runs
+  Time (mean ± σ):       6.8 ms ±   1.8 ms    [User: 2.5 ms, System: 2.3 ms]
+  Range (min … max):     4.9 ms …  20.2 ms    343 runs
 ```
 
 Average performance with the repository feature enabled:
@@ -70,6 +61,6 @@ Average performance with the repository feature enabled:
 ```sh
 $ hyperfine --shell=none 'powergoline ...'
 Benchmark 1: powergoline -time.on -user.on -host.on -cwd.on -cwd.n=3 -repo.on -status.code=0
-  Time (mean ± σ):      16.3 ms ±   2.3 ms    [User: 6.7 ms, System: 7.2 ms]
-  Range (min … max):    12.9 ms …  28.1 ms    139 runs
+  Time (mean ± σ):      21.9 ms ±   4.3 ms    [User: 8.7 ms, System: 10.2 ms]
+  Range (min … max):    15.4 ms …  34.8 ms    99 runs
 ```
